@@ -384,9 +384,10 @@ function App() {
                       <div 
                         ref={provided.innerRef} 
                         {...provided.droppableProps}
-                        className={`min-h-[120px] p-2 ${
+                        className={`min-h-[120px] p-2 relative ${
                           snapshot.isDraggingOver ? 'bg-slate-100' : 'bg-white'
                         }`}
+                        style={{ overflow: 'visible' }}
                       >
                         {(visibleIdsByColumn[col] || []).map((id, index) => (
                           <TaskCard 

@@ -131,9 +131,9 @@ const TaskCard = ({
                 <span>Sous-tâches</span>
                 <span>{progress}%</span>
               </div>
-              <div className="w-full bg-slate-200 rounded-full h-1.5">
+              <div className="w-full bg-slate-200 rounded-full h-2">
                 <div 
-                  className={`h-1.5 rounded-full transition-all duration-300 ${
+                  className={`h-2 rounded-full transition-all duration-300 ${
                     progress === 100 ? 'bg-emerald-500' : progress > 0 ? 'bg-blue-500' : 'bg-slate-300'
                   }`}
                   style={{ width: `${progress}%` }}
@@ -156,23 +156,23 @@ const TaskCard = ({
               >
                 <SelectTrigger 
                   data-select-trigger
-                  className="inline-flex items-center gap-1 rounded-full px-1.5 pr-3 py-0 text-[9px] leading-none font-medium shadow-sm border-0 focus:outline-none focus:ring-2 focus:ring-slate-200 whitespace-nowrap" 
+                  className="inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-medium shadow-sm border-0 focus:outline-none focus:ring-2 focus:ring-slate-200 whitespace-nowrap" 
                   style={styleWhen(task.when || "")}
                 >
                   <CalendarIcon className="h-3 w-3 opacity-70" />
                   <span>{task.when || "A définir"}</span>
                 </SelectTrigger>
-                <SelectContent className="rounded-xl border border-slate-200">
+                <SelectContent className="rounded-xl border border-slate-200 min-w-[180px]">
                   {/* Option de vidage */}
                   <SelectItem value="__clear">
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full" style={styleWhen("")}>
+                    <span className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full" style={styleWhen("")}>
                       <CalendarIcon className="h-3 w-3 opacity-70" />
                       A définir
                     </span>
                   </SelectItem>
                   {WHEN_OPTIONS.filter(x => x !== "").map((opt) => (
                     <SelectItem key={opt} value={opt}>
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full" style={styleWhen(opt)}>
+                      <span className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full" style={styleWhen(opt)}>
                         <CalendarIcon className="h-3 w-3 opacity-70" />
                         {opt}
                       </span>

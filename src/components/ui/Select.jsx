@@ -47,7 +47,7 @@ export const Select = ({ value, onValueChange, children, className = '' }) => {
         {React.cloneElement(trigger, { isOpen })}
       </div>
       {isOpen && (
-        <div className="absolute z-50 mt-1">
+        <div className="absolute z-[60] bottom-full mb-1 left-0 right-0">
           {React.cloneElement(content, { onValueChange, setIsOpen })}
         </div>
       )}

@@ -18,7 +18,10 @@ export const useTasks = () => {
       setLoading(true)
       setError(null)
       
+      console.log('🔄 Tentative de connexion à Supabase...')
       const dbTasks = await taskService.getAllTasks()
+      console.log('✅ Connexion réussie, tâches chargées:', dbTasks.length)
+      
       const tasksMap = {}
       
       dbTasks.forEach(dbTask => {
@@ -31,8 +34,8 @@ export const useTasks = () => {
       setTasks(tasksMap)
       setOrder(reorganizeTaskOrder(tasksMap, 'compartment'))
     } catch (err) {
-      console.error('Erreur lors du chargement des tâches:', err)
-      setError(err.message)
+      console.error('❌ Erreur lors du chargement des tâches:', err)
+      setError(`Erreur de connexion: ${err.message}`)
     } finally {
       setLoading(false)
     }
@@ -95,6 +98,17 @@ export const useTasks = () => {
           setOrder(prev => {
             const newOrder = JSON.parse(JSON.stringify(prev))
             
+            // Sauvegarder les positions actuelles avant de retirer
+            const positions = {}
+            Object.keys(newOrder).forEach(groupType => {
+              Object.keys(newOrder[groupType]).forEach(column => {
+                const index = newOrder[groupType][column].indexOf(taskId)
+                if (index !== -1) {
+                  positions[groupType] = { column, index }
+                }
+              })
+            })
+            
             // Retirer de toutes les colonnes
             Object.values(newOrder).forEach(group => {
               Object.keys(group).forEach(column => {
@@ -102,15 +116,34 @@ export const useTasks = () => {
               })
             })
             
-            // Réajouter dans les bonnes colonnes
+            // Réajouter dans les bonnes colonnes à la même position si possible
             if (updatedTask.compartment && newOrder.compartment[updatedTask.compartment]) {
-              newOrder.compartment[updatedTask.compartment].push(taskId)
+              const pos = positions.compartment
+              if (pos && pos.column === updatedTask.compartment) {
+                // Même colonne, remettre à la même position
+                newOrder.compartment[updatedTask.compartment].splice(pos.index, 0, taskId)
+              } else {
+                // Nouvelle colonne, ajouter à la fin
+                newOrder.compartment[updatedTask.compartment].push(taskId)
+              }
             }
+            
             if (updatedTask.priority && newOrder.priority[updatedTask.priority]) {
-              newOrder.priority[updatedTask.priority].push(taskId)
+              const pos = positions.priority
+              if (pos && pos.column === updatedTask.priority) {
+                newOrder.priority[updatedTask.priority].splice(pos.index, 0, taskId)
+              } else {
+                newOrder.priority[updatedTask.priority].push(taskId)
+              }
             }
+            
             if (updatedTask.status && newOrder.status[updatedTask.status]) {
-              newOrder.status[updatedTask.status].push(taskId)
+              const pos = positions.status
+              if (pos && pos.column === updatedTask.status) {
+                newOrder.status[updatedTask.status].splice(pos.index, 0, taskId)
+              } else {
+                newOrder.status[updatedTask.status].push(taskId)
+              }
             }
             
             return newOrder

@@ -77,7 +77,7 @@ const TaskModal = ({
     e.preventDefault()
     
     if (!title.trim()) return
-    if (fromQuickId && !compartment) return // Compartiment requis pour les tâches rapides
+    if (fromQuickId && !compartment) return
     
     const taskData = {
       id: editing?.id,
@@ -144,7 +144,7 @@ const TaskModal = ({
                 value={title} 
                 onChange={(e) => setTitle(e.target.value)} 
                 required
-                className="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-slate-300" 
+                className="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-slate-300"
                 placeholder="Ex. Export vers portail"
                 disabled={loading}
               />
@@ -320,35 +320,28 @@ const TaskModal = ({
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Select 
-                        value={s.status} 
-                        onValueChange={(v) => handleSubtaskStatusChange(s.id, v)}
-                      >
-                        <SelectTrigger className="rounded-lg border border-slate-300 px-2 py-1">
-                          <span 
-                            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-xs" 
-                            style={badgeStyle(STATUS_COLORS[s.status])}
+                      <div className="flex items-center gap-1">
+                        {["À faire", "En cours", "Terminé"].map(status => (
+                          <button
+                            key={status}
+                            type="button"
+                            onClick={() => handleSubtaskStatusChange(s.id, status)}
+                            className={`px-2 py-0.5 rounded-full border text-xs transition-all ${
+                              s.status === status 
+                                ? 'ring-2 ring-blue-300' 
+                                : 'hover:scale-105'
+                            }`}
+                            style={badgeStyle(STATUS_COLORS[status])}
+                            title={`Marquer comme: ${status}`}
                           >
-                            {s.status}
-                          </span>
-                        </SelectTrigger>
-                        <SelectContent className="rounded-xl border border-slate-200">
-                          {["À faire", "En cours", "Terminé"].map(st => (
-                            <SelectItem key={st} value={st}>
-                              <span 
-                                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-xs" 
-                                style={badgeStyle(STATUS_COLORS[st])}
-                              >
-                                {st}
-                              </span>
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                            {status}
+                          </button>
+                        ))}
+                      </div>
                       <button 
                         type="button" 
                         onClick={() => handleRemoveSubtask(s.id)} 
-                        className="text-slate-400 hover:text-red-600"
+                        className="text-slate-400 hover:text-red-600 ml-1"
                       >
                         <X className="h-4 w-4" />
                       </button>
