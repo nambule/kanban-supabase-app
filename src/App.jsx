@@ -40,7 +40,7 @@ function App() {
     P1: true, P2: true, P3: true, P4: true, P5: true 
   })
   const [statusFilterState, setStatusFilterState] = useState({ 
-    "À faire": true, "À analyser": true, "En cours": true, "Terminé": false 
+    "To Do": true, "To Analyze": true, "In Progress": true, "Done": false 
   })
   const [sortBy, setSortBy] = useState("none")
   const [modal, setModal] = useState({ 
@@ -57,7 +57,6 @@ function App() {
     signIn, 
     signUp, 
     signOut, 
-    deleteAccount,
     isAuthenticated 
   } = useAuth()
 
@@ -162,8 +161,8 @@ function App() {
     let cols = columns
     if (groupBy === "status") {
       cols = cols.filter(c => !(
-        c === "Terminé" && 
-        (!statusFilterState["Terminé"] || (visibleIdsByColumn[c]?.length || 0) === 0)
+        c === "Done" && 
+        (!statusFilterState["Done"] || (visibleIdsByColumn[c]?.length || 0) === 0)
       ))
     }
     return cols
@@ -227,14 +226,14 @@ function App() {
   // Réinitialiser les filtres
   const resetFilters = () => {
     setPriorityFilter({ P1: true, P2: true, P3: true, P4: true, P5: true })
-    setStatusFilterState({ "À faire": true, "À analyser": true, "En cours": true, "Terminé": true })
+    setStatusFilterState({ "To Do": true, "To Analyze": true, "In Progress": true, "Done": true })
   }
 
   // Affichage du chargement de l'authentification
   if (authLoading) {
     return (
       <div className="min-h-screen w-full bg-slate-50 flex items-center justify-center">
-        <div className="text-slate-600">Chargement...</div>
+        <div className="text-slate-600">Loading...</div>
       </div>
     )
   }
@@ -246,13 +245,13 @@ function App() {
         <div className="text-center space-y-6 p-8">
           <div>
             <h1 className="text-3xl font-bold text-slate-900 mb-2">My Kanban Board</h1>
-            <p className="text-slate-600">Organisez vos tâches efficacement</p>
+            <p className="text-slate-600">Organize your tasks efficiently</p>
           </div>
           <button 
             onClick={() => setAuthOpen(true)}
             className="px-6 py-3 rounded-xl bg-slate-900 text-white hover:bg-slate-800 font-medium"
           >
-            Se connecter
+            Sign In
           </button>
         </div>
         {authOpen && (
@@ -272,7 +271,7 @@ function App() {
   if (tasksLoading) {
     return (
       <div className="min-h-screen w-full bg-slate-50 flex items-center justify-center">
-        <div className="text-slate-600">Chargement...</div>
+        <div className="text-slate-600">Loading...</div>
       </div>
     )
   }
@@ -282,7 +281,7 @@ function App() {
     return (
       <div className="min-h-screen w-full bg-slate-50 flex items-center justify-center">
         <div className="text-red-600">
-          Erreur: {tasksError || quickError}
+          Error: {tasksError || quickError}
         </div>
       </div>
     )
@@ -302,7 +301,7 @@ function App() {
               <input 
                 value={search} 
                 onChange={(e) => setSearch(e.target.value)} 
-                placeholder="Rechercher…"
+                placeholder="Search…"
                 className="pl-8 pr-3 py-2 rounded-xl bg-slate-100 focus:bg-white border border-transparent focus:border-slate-300 outline-none text-sm" 
               />
             </div>
@@ -310,10 +309,10 @@ function App() {
             {/* Filtres */}
             <details ref={filterRef} className="relative">
               <summary className="list-none select-none inline-flex items-center gap-1 px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-sm cursor-pointer">
-                <FilterIcon className="h-4 w-4" /> Filtres <ChevronDown className="h-4 w-4" />
+                <FilterIcon className="h-4 w-4" /> Filters <ChevronDown className="h-4 w-4" />
               </summary>
               <div className="absolute right-0 mt-2 w-64 rounded-xl border border-slate-200 bg-white p-3 shadow-xl z-30">
-                <div className="text-xs font-medium uppercase text-slate-500 mb-2">Priorité</div>
+                <div className="text-xs font-medium uppercase text-slate-500 mb-2">Priority</div>
                 {PRIORITIES.map((p) => (
                   <label key={p} className="flex items-center gap-2 py-1 text-sm">
                     <input 
@@ -328,7 +327,7 @@ function App() {
                   </label>
                 ))}
                 
-                <div className="text-xs font-medium uppercase text-slate-500 mt-3 mb-2">Statut</div>
+                <div className="text-xs font-medium uppercase text-slate-500 mt-3 mb-2">Status</div>
                 {STATUSES.map((s) => (
                   <label key={s} className="flex items-center gap-2 py-1 text-sm">
                     <input 
@@ -346,12 +345,12 @@ function App() {
                 ))}
                 
                 <div className="mt-3 flex items-center justify-between">
-                  <div className="text-xs text-slate-500">Réinitialiser filtres</div>
+                  <div className="text-xs text-slate-500">Reset filters</div>
                   <button 
                     onClick={resetFilters} 
                     className="text-xs px-2 py-1 rounded-lg bg-slate-100 hover:bg-slate-200"
                   >
-                    Réinitialiser
+                    Reset
                   </button>
                 </div>
               </div>
@@ -359,31 +358,31 @@ function App() {
 
             {/* Groupement */}
             <div className="inline-flex items-center gap-2 text-sm">
-              <span className="text-slate-500">Regrouper par</span>
+              <span className="text-slate-500">Group by</span>
               <select 
                 value={groupBy} 
                 onChange={(e) => setGroupBy(e.target.value)} 
                 className="px-2 py-2 rounded-xl bg-slate-100 hover:bg-slate-200"
               >
-                <option value="compartment">Compartiment</option>
-                <option value="priority">Priorité</option>
-                <option value="status">Statut</option>
+                <option value="compartment">Compartment</option>
+                <option value="priority">Priority</option>
+                <option value="status">Status</option>
               </select>
             </div>
 
             {/* Tri */}
             <div className="inline-flex items-center gap-2 text-sm">
-              <span className="text-slate-500">Trier</span>
+              <span className="text-slate-500">Sort</span>
               <select 
                 value={sortBy} 
                 onChange={(e) => setSortBy(e.target.value)} 
                 className="px-2 py-2 rounded-xl bg-slate-100 hover:bg-slate-200"
               >
-                <option value="none">Aucun</option>
+                <option value="none">None</option>
                 <option value="priorityAsc">P1→P5</option>
                 <option value="priorityDesc">P5→P1</option>
-                <option value="whenAsc">Quand↑</option>
-                <option value="whenDesc">Quand↓</option>
+                <option value="whenAsc">When↑</option>
+                <option value="whenDesc">When↓</option>
               </select>
             </div>
 
@@ -392,7 +391,7 @@ function App() {
               onClick={() => setQuickOpen(true)} 
               className="relative inline-flex items-center gap-1 text-sm px-3 py-2 rounded-xl bg-slate-900 text-white hover:bg-slate-800"
             >
-              Tâche rapide
+Quick Task
               {quickTasks.length > 0 && (
                 <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-semibold">
                   {quickTasks.length}
@@ -401,7 +400,7 @@ function App() {
             </button>
 
             {/* Menu compte utilisateur */}
-            <AccountMenu user={user} onSignOut={signOut} onDeleteAccount={deleteAccount} />
+            <AccountMenu user={user} onSignOut={signOut} />
           </div>
         </div>
       </header>
@@ -436,7 +435,7 @@ function App() {
                       onClick={() => openCreate(col)} 
                       className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs bg-slate-100 hover:bg-slate-200"
                     >
-                      <Plus className="h-4 w-4" /> Ajouter
+                      <Plus className="h-4 w-4" /> Add
                     </button>
                   </div>
 

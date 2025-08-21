@@ -38,7 +38,7 @@ export const taskService = {
         title: task.title,
         priority: task.priority || 'P3',
         compartment: task.compartment,
-        status: task.status || 'À faire',
+        status: task.status || 'To Do',
         size: task.size || 'M',
         note: task.note || '',
         when: task.when || '',

@@ -5,7 +5,7 @@ import AccountModal from './AccountModal'
 /**
  * Menu compte utilisateur avec dropdown style Gmail
  */
-const AccountMenu = ({ user, onSignOut, onDeleteAccount }) => {
+const AccountMenu = ({ user, onSignOut }) => {
   const [isOpen, setIsOpen] = useState(false)
   const [showAccountModal, setShowAccountModal] = useState(false)
   const menuRef = useRef(null)
@@ -116,7 +116,7 @@ const AccountMenu = ({ user, onSignOut, onDeleteAccount }) => {
                 }}
               >
                 <User className="w-4 h-4 text-slate-500" />
-                Mon compte
+My Account
               </button>
 
               {/* Divider */}
@@ -128,7 +128,7 @@ const AccountMenu = ({ user, onSignOut, onDeleteAccount }) => {
                 className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-3"
               >
                 <LogOut className="w-4 h-4 text-slate-500" />
-                Déconnexion
+Sign Out
               </button>
             </div>
           </div>
@@ -140,7 +140,6 @@ const AccountMenu = ({ user, onSignOut, onDeleteAccount }) => {
         <AccountModal
           onClose={() => setShowAccountModal(false)}
           user={user}
-          onDeleteAccount={onDeleteAccount}
         />
       )}
     </div>

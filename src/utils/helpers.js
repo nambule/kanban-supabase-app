@@ -1,4 +1,4 @@
-import { WHEN_COLORS, STATUS_COLORS, SIZE_COLORS, COMPARTMENT_COLORS } from './constants'
+import { WHEN_COLORS, STATUS_COLORS, SIZE_COLORS, COMPARTMENT_COLORS, STATUS_MAPPING, WHEN_MAPPING } from './constants'
 
 // Fonctions utilitaires pour l'application Kanban
 
@@ -36,7 +36,7 @@ export const compStyle = (colorConfig) => ({
   borderColor: colorConfig.border
 })
 
-// Conversion des données Supabase vers le format frontend
+// Conversion des données Supabase vers le format frontend avec normalisation
 export const transformTaskFromDB = (dbTask) => {
   if (!dbTask) return null
   
@@ -45,10 +45,10 @@ export const transformTaskFromDB = (dbTask) => {
     title: dbTask.title,
     priority: dbTask.priority,
     compartment: dbTask.compartment,
-    status: dbTask.status,
+    status: STATUS_MAPPING[dbTask.status] || dbTask.status, // Normaliser le statut
     size: dbTask.size,
     note: dbTask.note,
-    when: dbTask.when,
+    when: WHEN_MAPPING[dbTask.when] || dbTask.when, // Normaliser le when
     dueDate: dbTask.due_date,
     flagged: dbTask.flagged,
     subtasks: dbTask.subtasks || [],
@@ -87,7 +87,7 @@ export const reorganizeTaskOrder = (tasks, groupBy) => {
   const order = createEmptyOrder(
     ["PM", "CPO", "FER", "NOVAE", "MRH", "CDA"],
     ["P1", "P2", "P3", "P4", "P5"],
-    ["À faire", "À analyser", "En cours", "Terminé"]
+    ["To Do", "To Analyze", "In Progress", "Done"]
   )
 
   Object.values(tasks).forEach(task => {

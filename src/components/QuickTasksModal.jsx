@@ -22,7 +22,7 @@ const QuickTasksModal = ({
       await onAdd(title)
       setInput("")
     } catch (error) {
-      console.error('Erreur lors de l\'ajout de la tâche rapide:', error)
+      console.error('Error adding quick task:', error)
     }
   }
 
@@ -42,7 +42,7 @@ const QuickTasksModal = ({
     >
       <div className="w-full max-w-xl max-h-[calc(100vh-2rem)] rounded-2xl bg-white shadow-2xl border border-slate-200 overflow-hidden flex flex-col">
         <div className="px-5 py-4 border-b border-slate-200 flex items-center justify-between">
-          <div className="font-semibold">Tâches rapides</div>
+          <div className="font-semibold">Quick Tasks</div>
           <button 
             type="button" 
             onClick={onClose} 
@@ -58,7 +58,7 @@ const QuickTasksModal = ({
               value={input} 
               onChange={(e) => setInput(e.target.value)} 
               onKeyPress={handleKeyPress}
-              placeholder="Titre de la tâche rapide" 
+              placeholder="Quick task title" 
               className="flex-1 rounded-xl border border-slate-300 px-3 py-2"
               disabled={loading}
             />
@@ -80,7 +80,7 @@ const QuickTasksModal = ({
                     onClick={() => onClassify(q.id)} 
                     className="px-2 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-xs"
                   >
-                    Classer
+                    Classify
                   </button>
                   <button 
                     onClick={() => onRemove(q.id)} 
@@ -93,7 +93,7 @@ const QuickTasksModal = ({
             ))}
             {quickTasks.length === 0 && (
               <li className="px-3 py-8 text-center text-sm text-slate-400">
-                Aucune tâche rapide pour le moment.
+                No quick tasks at the moment.
               </li>
             )}
           </ul>
@@ -104,7 +104,7 @@ const QuickTasksModal = ({
             onClick={onClose} 
             className="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200"
           >
-            Fermer
+Close
           </button>
         </div>
       </div>

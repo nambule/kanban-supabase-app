@@ -1,25 +1,51 @@
 // Configuration et constantes de l'application Kanban
 
+// Mapping pour la compatibilité avec les données existantes en français
+export const STATUS_MAPPING = {
+  "À faire": "To Do",
+  "À analyser": "To Analyze", 
+  "En cours": "In Progress",
+  "Terminé": "Done",
+  // Mapping inverse pour la traduction
+  "To Do": "To Do",
+  "To Analyze": "To Analyze",
+  "In Progress": "In Progress", 
+  "Done": "Done"
+}
+
+export const WHEN_MAPPING = {
+  "Aujourd'hui": "Today",
+  "Cette semaine": "This Week",
+  "Semaine prochaine": "Next Week",
+  "Ce mois-ci": "This Month",
+  "": "",
+  // Mapping inverse
+  "Today": "Today",
+  "This Week": "This Week", 
+  "Next Week": "Next Week",
+  "This Month": "This Month"
+}
+
 export const COMPARTMENTS = ["PM", "CPO", "FER", "NOVAE", "MRH", "CDA"]
 export const PRIORITIES = ["P1", "P2", "P3", "P4", "P5"]
-export const STATUSES = ["À faire", "À analyser", "En cours", "Terminé"]
+export const STATUSES = ["To Do", "To Analyze", "In Progress", "Done"]
 export const SIZES = ["S", "M", "L", "XL", "XXL"]
-export const WHEN_OPTIONS = ["", "Aujourd'hui", "Cette semaine", "Semaine prochaine", "Ce mois-ci"]
+export const WHEN_OPTIONS = ["", "Today", "This Week", "Next Week", "This Month"]
 
 // Couleurs et styles pour l'interface
 export const WHEN_COLORS = {
-  "": { bg: "#F8FAFC", text: "#64748B" },               // slate-50 / 500 (très clair)
-  "Aujourd'hui": { bg: "#FEE2E2", text: "#B91C1C" },    // red-100 / 700
-  "Cette semaine": { bg: "#FFEDD5", text: "#C2410C" },  // orange-100 / 700
-  "Semaine prochaine": { bg: "#FEF9C3", text: "#A16207" }, // amber-100 / 700 (jaune chaud)
-  "Ce mois-ci": { bg: "#DBEAFE", text: "#1D4ED8" },     // blue-100 / 700
+  "": { bg: "#F8FAFC", text: "#64748B" },               // slate-50 / 500 (very light)
+  "Today": { bg: "#FEE2E2", text: "#B91C1C" },    // red-100 / 700
+  "This Week": { bg: "#FFEDD5", text: "#C2410C" },  // orange-100 / 700
+  "Next Week": { bg: "#FEF9C3", text: "#A16207" }, // amber-100 / 700 (warm yellow)
+  "This Month": { bg: "#DBEAFE", text: "#1D4ED8" },     // blue-100 / 700
 }
 
 export const WHEN_ORDER = { 
-  "Aujourd'hui": 1, 
-  "Cette semaine": 2, 
-  "Semaine prochaine": 3, 
-  "Ce mois-ci": 4, 
+  "Today": 1, 
+  "This Week": 2, 
+  "Next Week": 3, 
+  "This Month": 4, 
   "": 5 
 }
 
@@ -43,10 +69,10 @@ export const PRIORITY_RANK = { P1: 1, P2: 2, P3: 3, P4: 4, P5: 5 }
 
 // Couleurs pour les statuts et les tailles
 export const STATUS_COLORS = {
-  "À faire":   { bg: "#F1F5F9", text: "#334155", border: "#CBD5E1" }, // slate-100/700/300
-  "À analyser":{ bg: "#E0F2FE", text: "#075985", border: "#BAE6FD" }, // sky-100/800/200
-  "En cours":  { bg: "#FEF3C7", text: "#92400E", border: "#FDE68A" }, // amber-100/800/200
-  "Terminé":   { bg: "#DCFCE7", text: "#065F46", border: "#BBF7D0" }, // emerald-100/800/200
+  "To Do":   { bg: "#F1F5F9", text: "#334155", border: "#CBD5E1" }, // slate-100/700/300
+  "To Analyze":{ bg: "#E0F2FE", text: "#075985", border: "#BAE6FD" }, // sky-100/800/200
+  "In Progress":  { bg: "#FEF3C7", text: "#92400E", border: "#FDE68A" }, // amber-100/800/200
+  "Done":   { bg: "#DCFCE7", text: "#065F46", border: "#BBF7D0" }, // emerald-100/800/200
 }
 
 export const SIZE_COLORS = {

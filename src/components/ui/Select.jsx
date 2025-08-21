@@ -3,6 +3,7 @@ import { ChevronDown } from 'lucide-react'
 
 export const Select = ({ value, onValueChange, children, className = '' }) => {
   const [isOpen, setIsOpen] = useState(false)
+  const [dropdownPosition, setDropdownPosition] = useState('bottom')
   const selectRef = useRef(null)
 
   useEffect(() => {
@@ -21,6 +22,24 @@ export const Select = ({ value, onValueChange, children, className = '' }) => {
     if (isOpen) {
       document.addEventListener('mousedown', handleClickOutside)
       document.addEventListener('keydown', handleEscape)
+      
+      // Déterminer la position du dropdown
+      if (selectRef.current) {
+        const rect = selectRef.current.getBoundingClientRect()
+        const spaceBelow = window.innerHeight - rect.bottom
+        const spaceAbove = rect.top
+        
+        // Si c'est un select dans une TaskCard, toujours ouvrir vers le haut
+        if (selectRef.current?.classList.contains('task-card-select')) {
+          setDropdownPosition('top')
+        }
+        // Sinon, détection intelligente normale
+        else if (spaceBelow < 200 && spaceAbove > spaceBelow) {
+          setDropdownPosition('top')
+        } else {
+          setDropdownPosition('bottom')
+        }
+      }
     }
 
     return () => {
@@ -47,7 +66,11 @@ export const Select = ({ value, onValueChange, children, className = '' }) => {
         {React.cloneElement(trigger, { isOpen })}
       </div>
       {isOpen && (
-        <div className="absolute z-[60] bottom-full mb-1 left-0 right-0">
+        <div className={`absolute z-[60] left-0 right-0 ${
+          dropdownPosition === 'top' 
+            ? 'bottom-full mb-1' 
+            : 'top-full mt-1'
+        }`}>
           {React.cloneElement(content, { onValueChange, setIsOpen })}
         </div>
       )}

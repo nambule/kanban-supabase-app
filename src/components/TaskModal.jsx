@@ -41,7 +41,7 @@ const TaskModal = ({
   )
   const [status, setStatus] = useState(
     editing?.status || 
-    (groupBy === "status" && STATUSES.includes(initialColumn) ? initialColumn : "À faire")
+    (groupBy === "status" && STATUSES.includes(initialColumn) ? initialColumn : "To Do")
   )
   const [size, setSize] = useState(editing?.size || "M")
   const [note, setNote] = useState(editing?.note || "")
@@ -50,7 +50,7 @@ const TaskModal = ({
   
   // Normaliser les sous-tâches
   const normalizeSubtasks = (arr) => 
-    (arr || []).map((s) => s.status ? s : { ...s, status: s.done ? "Terminé" : "À faire" })
+    (arr || []).map((s) => s.status ? s : { ...s, status: s.done ? "Done" : "To Do" })
   
   const [subtasks, setSubtasks] = useState(normalizeSubtasks(editing?.subtasks || []))
   const [subInput, setSubInput] = useState("")
@@ -60,7 +60,7 @@ const TaskModal = ({
     setSubtasks(prev => [...prev, { 
       id: Math.random().toString(36).slice(2, 10), 
       title: subInput.trim(), 
-      status: "À faire" 
+      status: "To Do" 
     }])
     setSubInput("")
   }
@@ -123,7 +123,7 @@ const TaskModal = ({
           {/* En-tête */}
           <div className="px-5 py-4 border-b border-slate-200 flex items-center justify-between">
             <div className="font-semibold">
-              {editing ? "Modifier la tâche" : "Nouvelle tâche"}
+              {editing ? "Edit Task" : "New Task"}
             </div>
             <button 
               type="button" 
@@ -138,14 +138,14 @@ const TaskModal = ({
           <div className="px-5 py-4 space-y-4 overflow-y-auto flex-1 min-h-0">
             {/* Titre */}
             <div>
-              <label className="text-sm text-slate-600">Titre</label>
+              <label className="text-sm text-slate-600">Title</label>
               <input 
                 autoFocus 
                 value={title} 
                 onChange={(e) => setTitle(e.target.value)} 
                 required
                 className="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-slate-300"
-                placeholder="Ex. Export vers portail"
+                placeholder="e.g. Export to portal"
                 disabled={loading}
               />
             </div>
@@ -153,7 +153,7 @@ const TaskModal = ({
             {/* Priorité et Compartiment */}
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-sm text-slate-600">Priorité</label>
+                <label className="text-sm text-slate-600">Priority</label>
                 <div className="mt-1">
                   <Select value={priority} onValueChange={setPriority}>
                     <SelectTrigger className="w-full rounded-xl border border-slate-300 px-2 py-2">
@@ -178,7 +178,7 @@ const TaskModal = ({
                 </div>
               </div>
               <div>
-                <label className="text-sm text-slate-600">Compartiment</label>
+                <label className="text-sm text-slate-600">Department</label>
                 <select 
                   value={compartment} 
                   onChange={(e) => setCompartment(e.target.value)} 
@@ -195,7 +195,7 @@ const TaskModal = ({
             {/* Statut et Charge */}
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-sm text-slate-600">Statut</label>
+                <label className="text-sm text-slate-600">Status</label>
                 <div className="mt-1">
                   <Select value={status} onValueChange={setStatus}>
                     <SelectTrigger className="w-full rounded-xl border border-slate-300 px-2 py-2">
@@ -224,7 +224,7 @@ const TaskModal = ({
                 </div>
               </div>
               <div>
-                <label className="text-sm text-slate-600">Charge (T‑shirt)</label>
+                <label className="text-sm text-slate-600">Size (T-shirt)</label>
                 <div className="mt-1">
                   <Select value={size} onValueChange={setSize}>
                     <SelectTrigger className="w-full rounded-xl border border-slate-300 px-2 py-2">
@@ -257,7 +257,7 @@ const TaskModal = ({
             {/* Échéance et Flag */}
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-sm text-slate-600">Échéance</label>
+                <label className="text-sm text-slate-600">Due Date</label>
                 <input 
                   type="date" 
                   value={dueDate} 
@@ -274,7 +274,7 @@ const TaskModal = ({
                     onChange={() => setFlagged(f => !f)}
                     disabled={loading}
                   />
-                  Marquer comme à risque
+                  Mark as at risk
                 </label>
               </div>
             </div>
@@ -285,7 +285,7 @@ const TaskModal = ({
               <textarea 
                 value={note} 
                 onChange={(e) => setNote(e.target.value)} 
-                placeholder="Note interne (non affichée sur le board)" 
+                placeholder="Internal note (not displayed on board)" 
                 className="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2 h-28"
                 disabled={loading}
               />
@@ -293,12 +293,12 @@ const TaskModal = ({
 
             {/* Sous-tâches */}
             <div>
-              <div className="text-sm text-slate-600">Sous-tâches</div>
+              <div className="text-sm text-slate-600">Subtasks</div>
               <div className="mt-2 flex gap-2">
                 <input 
                   value={subInput} 
                   onChange={(e) => setSubInput(e.target.value)} 
-                  placeholder="Ajouter une sous-tâche"
+                  placeholder="Add a subtask"
                   className="flex-1 rounded-xl border border-slate-300 px-3 py-2"
                   disabled={loading}
                 />
@@ -315,13 +315,13 @@ const TaskModal = ({
                 {subtasks.map((s) => (
                   <li key={s.id} className="flex items-center justify-between px-3 py-2 text-sm">
                     <div className="flex items-center gap-2 flex-1">
-                      <span className={s.status === "Terminé" ? "line-through text-slate-400" : ""}>
+                      <span className={s.status === "Done" ? "line-through text-slate-400" : ""}>
                         {s.title}
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
                       <div className="flex items-center gap-1">
-                        {["À faire", "En cours", "Terminé"].map(status => (
+                        {["To Do", "In Progress", "Done"].map(status => (
                           <button
                             key={status}
                             type="button"
@@ -350,7 +350,7 @@ const TaskModal = ({
                 ))}
                 {subtasks.length === 0 && (
                   <li className="px-3 py-2 text-xs text-slate-400">
-                    Pas encore de sous-tâches
+                    No subtasks yet
                   </li>
                 )}
               </ul>
@@ -366,7 +366,7 @@ const TaskModal = ({
                 className="mr-auto px-3 py-2 rounded-xl bg-red-50 text-red-700 hover:bg-red-100 disabled:opacity-50"
                 disabled={loading}
               >
-                Supprimer
+                Delete
               </button>
             )}
             <button 
@@ -374,14 +374,14 @@ const TaskModal = ({
               onClick={onClose} 
               className="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200"
             >
-              Annuler
+              Cancel
             </button>
             <button 
               type="submit" 
               className="px-3 py-2 rounded-xl bg-slate-900 text-white hover:bg-slate-800 disabled:opacity-50"
               disabled={loading || !title.trim() || (fromQuickId && !compartment)}
             >
-              Enregistrer
+              {editing ? "Save" : "Create"}
             </button>
           </div>
         </form>

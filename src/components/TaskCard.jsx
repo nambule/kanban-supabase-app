@@ -28,7 +28,7 @@ const TaskCard = ({
 
   const progress = (task.subtasks?.length || 0) === 0 
     ? 0 
-    : Math.round(100 * (task.subtasks.filter((s) => s.status === "Terminé" || s.done === true).length) / (task.subtasks.length))
+    : Math.round(100 * (task.subtasks.filter((s) => s.status === "Done" || s.done === true).length) / (task.subtasks.length))
 
   const handleWhenChange = (newWhen) => {
     const value = newWhen === "__clear" ? "" : newWhen
@@ -107,7 +107,7 @@ const TaskCard = ({
               {task.flagged && (
                 <span className="inline-flex items-center gap-1">
                   <AlertTriangle className="h-3.5 w-3.5 text-red-500" />
-                  Risque
+                  Risk
                 </span>
               )}
               {task.dueDate && (
@@ -128,7 +128,7 @@ const TaskCard = ({
           {task.subtasks && task.subtasks.length > 0 && (
             <div className="mt-2 space-y-1">
               <div className="flex items-center justify-between text-xs text-slate-500">
-                <span>Sous-tâches</span>
+                <span>Subtasks</span>
                 <span>{progress}%</span>
               </div>
               <div className="w-full bg-slate-200 rounded-full h-2">
@@ -153,6 +153,7 @@ const TaskCard = ({
               <Select 
                 value={task.when || ""} 
                 onValueChange={handleWhenChange}
+                className="task-card-select"
               >
                 <SelectTrigger 
                   data-select-trigger
@@ -160,14 +161,14 @@ const TaskCard = ({
                   style={styleWhen(task.when || "")}
                 >
                   <CalendarIcon className="h-3 w-3 opacity-70" />
-                  <span>{task.when || "A définir"}</span>
+                  <span>{task.when || "To be defined"}</span>
                 </SelectTrigger>
                 <SelectContent className="rounded-xl border border-slate-200 min-w-[180px]">
                   {/* Option de vidage */}
                   <SelectItem value="__clear">
                     <span className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full" style={styleWhen("")}>
                       <CalendarIcon className="h-3 w-3 opacity-70" />
-                      A définir
+                      To be defined
                     </span>
                   </SelectItem>
                   {WHEN_OPTIONS.filter(x => x !== "").map((opt) => (

@@ -135,67 +135,6 @@ export const useAuth = () => {
     }
   }, [])
 
-  // Suppression du compte utilisateur
-  const deleteAccount = useCallback(async () => {
-    try {
-      setError(null)
-      setLoading(true)
-      
-      // Étape 1: Supprimer toutes les données utilisateur manuellement
-      console.log('Suppression des tâches...')
-      const { error: tasksError } = await supabase
-        .from('tasks')
-        .delete()
-        .eq('user_id', user?.id)
-      
-      if (tasksError) {
-        console.error('Erreur suppression tâches:', tasksError)
-        throw new Error('Erreur lors de la suppression des tâches: ' + tasksError.message)
-      }
-
-      console.log('Suppression des tâches rapides...')
-      const { error: quickTasksError } = await supabase
-        .from('quick_tasks')
-        .delete()
-        .eq('user_id', user?.id)
-      
-      if (quickTasksError) {
-        console.error('Erreur suppression tâches rapides:', quickTasksError)
-        throw new Error('Erreur lors de la suppression des tâches rapides: ' + quickTasksError.message)
-      }
-
-      // Étape 2: Tenter de supprimer via fonction RPC (si elle existe)
-      console.log('Tentative de suppression du compte via RPC...')
-      const { data: rpcResult, error: rpcError } = await supabase.rpc('delete_user')
-      
-      if (rpcError) {
-        console.log('Fonction RPC non disponible, suppression manuelle des données effectuée')
-        // Ce n'est pas critique, les données sont déjà supprimées
-      } else {
-        console.log('Résultat RPC:', rpcResult)
-      }
-
-      // Étape 3: Déconnexion forcée
-      console.log('Déconnexion...')
-      const { error: signOutError } = await supabase.auth.signOut()
-      if (signOutError) {
-        console.error('Erreur déconnexion:', signOutError)
-        // Forcer la déconnexion côté client
-        setUser(null)
-      }
-
-      // Message de succès
-      alert('Votre compte et toutes vos données ont été supprimés. Vous avez été déconnecté.')
-      
-      return { success: true }
-    } catch (err) {
-      console.error('Erreur de suppression du compte:', err)
-      setError(err.message)
-      throw err
-    } finally {
-      setLoading(false)
-    }
-  }, [user])
 
   return {
     user,
@@ -206,7 +145,6 @@ export const useAuth = () => {
     signOut,
     signInWithGoogle,
     resetPassword,
-    deleteAccount,
     isAuthenticated: !!user
   }
 }

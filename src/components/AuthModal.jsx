@@ -16,12 +16,12 @@ const AuthModal = ({ onClose, onSignIn, onSignUp, loading = false, error }) => {
     setLocalError('')
 
     if (!email.trim() || !password.trim()) {
-      setLocalError('Veuillez remplir tous les champs')
+      setLocalError('Please fill in all fields')
       return
     }
 
     if (password.length < 6) {
-      setLocalError('Le mot de passe doit contenir au moins 6 caractères')
+      setLocalError('Password must be at least 6 characters long')
       return
     }
 
@@ -31,10 +31,10 @@ const AuthModal = ({ onClose, onSignIn, onSignUp, loading = false, error }) => {
       } else {
         await onSignUp(email.trim(), password)
         setLocalError('')
-        alert('Inscription réussie ! Vérifiez votre email pour confirmer votre compte.')
+        alert('Registration successful! Check your email to confirm your account.')
       }
     } catch (err) {
-      setLocalError(err.message || 'Une erreur est survenue')
+      setLocalError(err.message || 'An error occurred')
     }
   }
 
@@ -58,7 +58,7 @@ const AuthModal = ({ onClose, onSignIn, onSignUp, loading = false, error }) => {
           <div className="flex items-center gap-2">
             <User className="h-5 w-5 text-slate-600" />
             <h2 className="font-semibold text-lg">
-              {mode === 'signin' ? 'Connexion' : 'Inscription'}
+              {mode === 'signin' ? 'Sign In' : 'Sign Up'}
             </h2>
           </div>
           <button 
@@ -79,7 +79,7 @@ const AuthModal = ({ onClose, onSignIn, onSignUp, loading = false, error }) => {
 
           {mode === 'signup' && (
             <div className="p-3 rounded-lg bg-blue-50 border border-blue-200 text-blue-700 text-sm">
-              Un email de confirmation sera envoyé après inscription.
+  A confirmation email will be sent after registration.
             </div>
           )}
 
@@ -94,7 +94,7 @@ const AuthModal = ({ onClose, onSignIn, onSignUp, loading = false, error }) => {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="votre@email.com"
+                placeholder="your@email.com"
                 className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-300 focus:border-slate-500 focus:ring-1 focus:ring-slate-500 outline-none"
                 disabled={loading}
                 required
@@ -105,7 +105,7 @@ const AuthModal = ({ onClose, onSignIn, onSignUp, loading = false, error }) => {
           {/* Password */}
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-2">
-              Mot de passe
+              Password
             </label>
             <div className="relative">
               <Lock className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
@@ -129,7 +129,7 @@ const AuthModal = ({ onClose, onSignIn, onSignUp, loading = false, error }) => {
             </div>
             {mode === 'signup' && (
               <p className="mt-1 text-xs text-slate-500">
-                Minimum 6 caractères
+                Minimum 6 characters
               </p>
             )}
           </div>
@@ -143,17 +143,17 @@ const AuthModal = ({ onClose, onSignIn, onSignUp, loading = false, error }) => {
             {loading ? (
               <>
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                {mode === 'signin' ? 'Connexion...' : 'Inscription...'}
+                {mode === 'signin' ? 'Signing in...' : 'Signing up...'}
               </>
             ) : (
-              mode === 'signin' ? 'Se connecter' : 'S\'inscrire'
+              mode === 'signin' ? 'Sign In' : 'Sign Up'
             )}
           </button>
 
           {/* Switch Mode */}
           <div className="text-center pt-4 border-t border-slate-200">
             <p className="text-sm text-slate-600">
-              {mode === 'signin' ? 'Pas encore de compte ?' : 'Déjà un compte ?'}
+              {mode === 'signin' ? 'Don\'t have an account?' : 'Already have an account?'}
               {' '}
               <button
                 type="button"
@@ -161,7 +161,7 @@ const AuthModal = ({ onClose, onSignIn, onSignUp, loading = false, error }) => {
                 className="text-slate-900 font-medium hover:underline"
                 disabled={loading}
               >
-                {mode === 'signin' ? 'S\'inscrire' : 'Se connecter'}
+                {mode === 'signin' ? 'Sign Up' : 'Sign In'}
               </button>
             </p>
           </div>

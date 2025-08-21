@@ -54,20 +54,40 @@ export const useTasks = () => {
       const newTask = transformTaskFromDB(dbTask)
       
       if (newTask) {
-        setTasks(prev => ({ ...prev, [newTask.id]: newTask }))
+        // Vérifier si la tâche n'existe pas déjà pour éviter les doublons
+        setTasks(prev => {
+          if (prev[newTask.id]) {
+            console.log('Tâche déjà présente, éviter la duplication:', newTask.id)
+            return prev
+          }
+          return { ...prev, [newTask.id]: newTask }
+        })
         
         // Mettre à jour l'ordre
         setOrder(prev => {
           const newOrder = { ...prev }
           
-          // Ajouter dans toutes les catégories appropriées
-          if (newTask.compartment && newOrder.compartment[newTask.compartment]) {
+          // Vérifier si l'ID n'est pas déjà dans les listes pour éviter les doublons
+          const taskAlreadyInCompartment = newTask.compartment && 
+            newOrder.compartment[newTask.compartment] && 
+            newOrder.compartment[newTask.compartment].includes(newTask.id)
+            
+          const taskAlreadyInPriority = newTask.priority && 
+            newOrder.priority[newTask.priority] && 
+            newOrder.priority[newTask.priority].includes(newTask.id)
+            
+          const taskAlreadyInStatus = newTask.status && 
+            newOrder.status[newTask.status] && 
+            newOrder.status[newTask.status].includes(newTask.id)
+          
+          // Ajouter seulement si pas déjà présent
+          if (newTask.compartment && newOrder.compartment[newTask.compartment] && !taskAlreadyInCompartment) {
             newOrder.compartment[newTask.compartment].push(newTask.id)
           }
-          if (newTask.priority && newOrder.priority[newTask.priority]) {
+          if (newTask.priority && newOrder.priority[newTask.priority] && !taskAlreadyInPriority) {
             newOrder.priority[newTask.priority].push(newTask.id)
           }
-          if (newTask.status && newOrder.status[newTask.status]) {
+          if (newTask.status && newOrder.status[newTask.status] && !taskAlreadyInStatus) {
             newOrder.status[newTask.status].push(newTask.id)
           }
           
