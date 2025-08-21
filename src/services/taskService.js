@@ -3,8 +3,10 @@ import { supabase } from './supabase'
 /**
  * Service pour gérer les tâches Kanban avec Supabase
  * Structure de table attendue :
- * - tasks: id, title, priority, compartment, status, size, note, when, due_date, flagged, subtasks, created_at, updated_at
- * - quick_tasks: id, title, created_at
+ * - tasks: id, title, priority, compartment, status, size, note, when, due_date, flagged, subtasks, user_id, created_at, updated_at
+ * - quick_tasks: id, title, user_id, created_at
+ * 
+ * Avec RLS (Row Level Security) activé pour sécuriser les données par utilisateur
  */
 
 export const taskService = {
@@ -27,6 +29,9 @@ export const taskService = {
    * Crée une nouvelle tâche
    */
   async createTask(task) {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) throw new Error('Utilisateur non authentifié')
+
     const { data, error } = await supabase
       .from('tasks')
       .insert([{
@@ -39,7 +44,8 @@ export const taskService = {
         when: task.when || '',
         due_date: task.dueDate || null,
         flagged: task.flagged || false,
-        subtasks: task.subtasks || []
+        subtasks: task.subtasks || [],
+        user_id: user.id
       }])
       .select()
       .single()
@@ -109,9 +115,15 @@ export const taskService = {
    * Crée une tâche rapide
    */
   async createQuickTask(title) {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) throw new Error('Utilisateur non authentifié')
+
     const { data, error } = await supabase
       .from('quick_tasks')
-      .insert([{ title }])
+      .insert([{ 
+        title,
+        user_id: user.id
+      }])
       .select()
       .single()
 

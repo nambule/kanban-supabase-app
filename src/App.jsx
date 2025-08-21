@@ -9,9 +9,11 @@ import {
 
 import { useTasks } from './hooks/useTasks'
 import { useQuickTasks } from './hooks/useQuickTasks'
+import { useAuth } from './hooks/useAuth'
 import TaskCard from './components/TaskCard'
 import TaskModal from './components/TaskModal'
 import QuickTasksModal from './components/QuickTasksModal'
+import AuthModal from './components/AuthModal'
 
 import {
   COMPARTMENTS,
@@ -44,6 +46,18 @@ function App() {
     open: false, editingId: null, initialColumn: null, prefillTitle: "", fromQuickId: null 
   })
   const [quickOpen, setQuickOpen] = useState(false)
+  const [authOpen, setAuthOpen] = useState(false)
+
+  // Hook d'authentification
+  const { 
+    user, 
+    loading: authLoading, 
+    error: authError,
+    signIn, 
+    signUp, 
+    signOut, 
+    isAuthenticated 
+  } = useAuth()
 
   // Hooks personnalisés pour les données
   const { 
@@ -214,7 +228,45 @@ function App() {
     setStatusFilterState({ "À faire": true, "À analyser": true, "En cours": true, "Terminé": true })
   }
 
-  // Affichage du chargement initial
+  // Affichage du chargement de l'authentification
+  if (authLoading) {
+    return (
+      <div className="min-h-screen w-full bg-slate-50 flex items-center justify-center">
+        <div className="text-slate-600">Chargement...</div>
+      </div>
+    )
+  }
+
+  // Redirection vers l'authentification si pas connecté
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen w-full bg-slate-50 flex items-center justify-center">
+        <div className="text-center space-y-6 p-8">
+          <div>
+            <h1 className="text-3xl font-bold text-slate-900 mb-2">My Kanban Board</h1>
+            <p className="text-slate-600">Organisez vos tâches efficacement</p>
+          </div>
+          <button 
+            onClick={() => setAuthOpen(true)}
+            className="px-6 py-3 rounded-xl bg-slate-900 text-white hover:bg-slate-800 font-medium"
+          >
+            Se connecter
+          </button>
+        </div>
+        {authOpen && (
+          <AuthModal
+            onClose={() => setAuthOpen(false)}
+            onSignIn={signIn}
+            onSignUp={signUp}
+            loading={authLoading}
+            error={authError}
+          />
+        )}
+      </div>
+    )
+  }
+
+  // Affichage du chargement des tâches
   if (tasksLoading) {
     return (
       <div className="min-h-screen w-full bg-slate-50 flex items-center justify-center">
@@ -240,6 +292,12 @@ function App() {
       <header className="sticky top-0 z-20 backdrop-blur bg-white/80 border-b border-slate-200">
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center gap-3">
           <div className="text-xl font-semibold tracking-tight">My Board</div>
+          
+          {/* Info utilisateur */}
+          <div className="flex items-center gap-2 text-sm text-slate-600">
+            <span>•</span>
+            <span>{user?.email}</span>
+          </div>
 
           <div className="ml-auto flex items-center gap-2">
             {/* Recherche */}
@@ -344,6 +402,14 @@ function App() {
                   {quickTasks.length}
                 </span>
               )}
+            </button>
+
+            {/* Déconnexion */}
+            <button 
+              onClick={signOut}
+              className="inline-flex items-center gap-1 text-sm px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700"
+            >
+              Déconnexion
             </button>
           </div>
         </div>
