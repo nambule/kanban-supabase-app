@@ -14,6 +14,7 @@ import TaskCard from './components/TaskCard'
 import TaskModal from './components/TaskModal'
 import QuickTasksModal from './components/QuickTasksModal'
 import AuthModal from './components/AuthModal'
+import AccountMenu from './components/AccountMenu'
 
 import {
   COMPARTMENTS,
@@ -292,12 +293,6 @@ function App() {
       <header className="sticky top-0 z-20 backdrop-blur bg-white/80 border-b border-slate-200">
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center gap-3">
           <div className="text-xl font-semibold tracking-tight">My Board</div>
-          
-          {/* Info utilisateur */}
-          <div className="flex items-center gap-2 text-sm text-slate-600">
-            <span>•</span>
-            <span>{user?.email}</span>
-          </div>
 
           <div className="ml-auto flex items-center gap-2">
             {/* Recherche */}
@@ -404,13 +399,8 @@ function App() {
               )}
             </button>
 
-            {/* Déconnexion */}
-            <button 
-              onClick={signOut}
-              className="inline-flex items-center gap-1 text-sm px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700"
-            >
-              Déconnexion
-            </button>
+            {/* Menu compte utilisateur */}
+            <AccountMenu user={user} onSignOut={signOut} />
           </div>
         </div>
       </header>
