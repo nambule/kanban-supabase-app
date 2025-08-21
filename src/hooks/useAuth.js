@@ -135,6 +135,31 @@ export const useAuth = () => {
     }
   }, [])
 
+  // Suppression du compte utilisateur
+  const deleteAccount = useCallback(async () => {
+    try {
+      setError(null)
+      setLoading(true)
+      
+      // Supprimer le compte utilisateur dans Supabase Auth
+      const { error } = await supabase.rpc('delete_user')
+      
+      if (error) {
+        // Fallback: demander à l'utilisateur de contacter l'admin
+        throw new Error('Impossible de supprimer le compte automatiquement. Veuillez contacter l\'administrateur.')
+      }
+      
+      // La déconnexion sera automatique après suppression
+      return { success: true }
+    } catch (err) {
+      console.error('Erreur de suppression du compte:', err)
+      setError(err.message)
+      throw err
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
   return {
     user,
     loading,
@@ -144,6 +169,7 @@ export const useAuth = () => {
     signOut,
     signInWithGoogle,
     resetPassword,
+    deleteAccount,
     isAuthenticated: !!user
   }
 }

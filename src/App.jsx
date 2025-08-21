@@ -57,6 +57,7 @@ function App() {
     signIn, 
     signUp, 
     signOut, 
+    deleteAccount,
     isAuthenticated 
   } = useAuth()
 
@@ -400,7 +401,7 @@ function App() {
             </button>
 
             {/* Menu compte utilisateur */}
-            <AccountMenu user={user} onSignOut={signOut} />
+            <AccountMenu user={user} onSignOut={signOut} onDeleteAccount={deleteAccount} />
           </div>
         </div>
       </header>
