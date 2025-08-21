@@ -14,11 +14,18 @@ const AccountModal = ({ onClose, user, onDeleteAccount, loading = false }) => {
     }
 
     try {
-      await onDeleteAccount()
-      // La déconnexion sera automatique après suppression
+      const result = await onDeleteAccount()
+      if (result?.success) {
+        // Fermer la modale immédiatement après succès
+        onClose()
+        // L'utilisateur sera déconnecté automatiquement
+      }
     } catch (error) {
       console.error('Erreur lors de la suppression du compte:', error)
-      alert('Erreur lors de la suppression du compte. Veuillez réessayer.')
+      alert('Erreur lors de la suppression du compte: ' + (error.message || 'Erreur inconnue'))
+      // Réinitialiser le formulaire de confirmation en cas d'erreur
+      setDeleteConfirmText('')
+      setShowDeleteConfirm(false)
     }
   }
 
