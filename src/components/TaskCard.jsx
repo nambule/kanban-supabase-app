@@ -117,7 +117,7 @@ const TaskCard = ({
               {task.subtasks && task.subtasks.length > 0 && (
                 <span className="inline-flex items-center gap-1">
                   <CheckSquare className="h-3.5 w-3.5" />
-                  {task.subtasks.filter(subtask => subtask.completed).length}/{task.subtasks.length}
+                  {task.subtasks.filter(subtask => subtask.status === "Done").length}/{task.subtasks.length}
                 </span>
               )}
               {task.note && task.note.trim() && (
