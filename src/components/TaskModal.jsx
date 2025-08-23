@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
-import { Plus, X } from 'lucide-react'
+import { Plus, X, Star } from 'lucide-react'
 import { Select, SelectTrigger, SelectContent, SelectItem } from './ui/Select'
+import DateRangePicker from './ui/DateRangePicker'
 import { 
   PRIORITIES, 
   COMPARTMENTS, 
@@ -46,11 +47,19 @@ const TaskModal = ({
   const [size, setSize] = useState(editing?.size || "M")
   const [note, setNote] = useState(editing?.note || "")
   const [dueDate, setDueDate] = useState(editing?.dueDate || "")
+  const [startDate, setStartDate] = useState(editing?.startDate || "")
+  const [hours, setHours] = useState(editing?.hours || "")
+  const [timeAllocation, setTimeAllocation] = useState(editing?.timeAllocation || "one shot")
   const [flagged, setFlagged] = useState(!!editing?.flagged)
+  const [completion, setCompletion] = useState(editing?.completion || 0)
   
   // Normaliser les sous-tâches
   const normalizeSubtasks = (arr) => 
-    (arr || []).map((s) => s.status ? s : { ...s, status: s.done ? "Done" : "To Do" })
+    (arr || []).map((s) => ({
+      ...s, 
+      status: s.status || (s.done ? "Done" : "To Do"),
+      nextAction: s.nextAction || false
+    }))
   
   const [subtasks, setSubtasks] = useState(normalizeSubtasks(editing?.subtasks || []))
   const [subInput, setSubInput] = useState("")
@@ -60,9 +69,17 @@ const TaskModal = ({
     setSubtasks(prev => [...prev, { 
       id: Math.random().toString(36).slice(2, 10), 
       title: subInput.trim(), 
-      status: "To Do" 
+      status: "To Do",
+      nextAction: false
     }])
     setSubInput("")
+  }
+
+  const handleSubtaskKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault()
+      handleAddSubtask()
+    }
   }
 
   const handleRemoveSubtask = (id) => {
@@ -71,6 +88,18 @@ const TaskModal = ({
 
   const handleSubtaskStatusChange = (subId, newStatus) => {
     setSubtasks(prev => prev.map(x => x.id === subId ? { ...x, status: newStatus } : x))
+  }
+
+  const handleSetNextAction = (subId) => {
+    setSubtasks(prev => prev.map(x => {
+      if (x.id === subId) {
+        // Toggle: if already next action, unselect it; otherwise select it
+        return { ...x, nextAction: !x.nextAction }
+      } else {
+        // Clear next action from all other subtasks
+        return { ...x, nextAction: false }
+      }
+    }))
   }
 
   const handleSubmit = async (e) => {
@@ -88,8 +117,12 @@ const TaskModal = ({
       size,
       note,
       dueDate,
+      startDate,
+      hours,
+      timeAllocation,
       flagged,
       subtasks,
+      completion,
       fromQuickId
     }
     
@@ -254,29 +287,128 @@ const TaskModal = ({
               </div>
             </div>
 
-            {/* Échéance et Flag */}
+            {/* Date Range Picker */}
+            <div>
+              <DateRangePicker
+                startDate={startDate}
+                endDate={dueDate}
+                onStartDateChange={setStartDate}
+                onEndDateChange={setDueDate}
+                disabled={loading}
+              />
+            </div>
+
+            {/* Hours and Time Allocation */}
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-sm text-slate-600">Due Date</label>
+                <label className="text-sm text-slate-600">Hours</label>
                 <input 
-                  type="date" 
-                  value={dueDate} 
-                  onChange={(e) => setDueDate(e.target.value)} 
+                  type="number" 
+                  min="0" 
+                  step="0.5"
+                  value={hours} 
+                  onChange={(e) => setHours(e.target.value)} 
                   className="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2"
+                  placeholder="e.g. 8 or 2.5"
                   disabled={loading}
                 />
               </div>
-              <div className="flex items-end">
-                <label className="inline-flex items-center gap-2 text-sm mt-auto">
-                  <input 
-                    type="checkbox" 
-                    checked={flagged} 
-                    onChange={() => setFlagged(f => !f)}
-                    disabled={loading}
-                  />
-                  Mark as at risk
-                </label>
+              <div>
+                <label className="text-sm text-slate-600">Time Allocation</label>
+                <div className="mt-1">
+                  <Select value={timeAllocation} onValueChange={setTimeAllocation}>
+                    <SelectTrigger className="w-full rounded-xl border border-slate-300 px-3 py-2">
+                      <span className="text-sm">
+                        {timeAllocation === "one shot" && "One Shot"}
+                        {timeAllocation === "per week" && "Per Week"}
+                        {timeAllocation === "per 2 weeks" && "Per 2 Weeks"}
+                      </span>
+                    </SelectTrigger>
+                    <SelectContent className="rounded-xl border border-slate-200">
+                      <SelectItem value="one shot">
+                        <span className="text-sm">One Shot</span>
+                      </SelectItem>
+                      <SelectItem value="per week">
+                        <span className="text-sm">Per Week</span>
+                      </SelectItem>
+                      <SelectItem value="per 2 weeks">
+                        <span className="text-sm">Per 2 Weeks</span>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
+            </div>
+
+            {/* Total Time, Weeks, and Risk Flag */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-slate-600">Total Time:</span>
+                  <span className="text-sm font-medium text-slate-900 bg-slate-100 px-2 py-1 rounded">
+                    {(() => {
+                      const hoursValue = parseFloat(hours) || 0
+                      if (hoursValue === 0) return "Not specified"
+                      
+                      if (timeAllocation === "one shot") {
+                        return `${hoursValue}h`
+                      }
+                      
+                      // Calculate weeks between dates
+                      let weeks = 1
+                      if (startDate && dueDate) {
+                        const start = new Date(startDate)
+                        const due = new Date(dueDate)
+                        if (due >= start) {
+                          const diffTime = Math.abs(due - start)
+                          const diffWeeks = Math.ceil(diffTime / (1000 * 60 * 60 * 24 * 7))
+                          weeks = Math.max(1, diffWeeks)
+                        }
+                      }
+                      
+                      if (timeAllocation === "per week") {
+                        const totalHours = hoursValue * weeks
+                        return `${totalHours}h`
+                      }
+                      
+                      if (timeAllocation === "per 2 weeks") {
+                        const periods = Math.ceil(weeks / 2)
+                        const totalHours = hoursValue * periods
+                        return `${totalHours}h`
+                      }
+                      
+                      return `${hoursValue}h`
+                    })()}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-slate-600">Duration:</span>
+                  <span className="text-sm font-medium text-slate-900 bg-slate-100 px-2 py-1 rounded">
+                    {(() => {
+                      if (startDate && dueDate) {
+                        const start = new Date(startDate)
+                        const due = new Date(dueDate)
+                        if (due >= start) {
+                          const diffTime = Math.abs(due - start)
+                          const diffWeeks = Math.ceil(diffTime / (1000 * 60 * 60 * 24 * 7))
+                          const weeks = Math.max(1, diffWeeks)
+                          return weeks === 1 ? "1 week" : `${weeks} weeks`
+                        }
+                      }
+                      return "Not specified"
+                    })()}
+                  </span>
+                </div>
+              </div>
+              <label className="inline-flex items-center gap-2 text-sm">
+                <input 
+                  type="checkbox" 
+                  checked={flagged} 
+                  onChange={() => setFlagged(f => !f)}
+                  disabled={loading}
+                />
+                Mark as at risk
+              </label>
             </div>
 
             {/* Note */}
@@ -291,6 +423,41 @@ const TaskModal = ({
               />
             </div>
 
+            {/* Completion Gauge */}
+            <div>
+              <label className="text-sm text-slate-600 mb-3 block">Task Progress</label>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between text-sm">
+                  <span>0%</span>
+                  <span className="font-medium">{completion}%</span>
+                  <span>100%</span>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  step="10"
+                  value={completion}
+                  onChange={(e) => setCompletion(parseInt(e.target.value))}
+                  className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer slider"
+                  disabled={loading}
+                />
+                <div className="flex justify-between text-xs text-slate-500">
+                  {[0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100].map((val) => (
+                    <button
+                      key={val}
+                      type="button"
+                      onClick={() => setCompletion(val)}
+                      className={`px-1 py-0.5 rounded ${completion === val ? 'bg-slate-900 text-white' : 'hover:bg-slate-100'}`}
+                      disabled={loading}
+                    >
+                      {val}%
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
             {/* Sous-tâches */}
             <div>
               <div className="text-sm text-slate-600">Subtasks</div>
@@ -298,6 +465,7 @@ const TaskModal = ({
                 <input 
                   value={subInput} 
                   onChange={(e) => setSubInput(e.target.value)} 
+                  onKeyDown={handleSubtaskKeyDown}
                   placeholder="Add a subtask"
                   className="flex-1 rounded-xl border border-slate-300 px-3 py-2"
                   disabled={loading}
@@ -315,8 +483,21 @@ const TaskModal = ({
                 {subtasks.map((s) => (
                   <li key={s.id} className="flex items-center justify-between px-3 py-2 text-sm">
                     <div className="flex items-center gap-2 flex-1">
-                      <span className={s.status === "Done" ? "line-through text-slate-400" : ""}>
+                      <button
+                        type="button"
+                        onClick={() => handleSetNextAction(s.id)}
+                        className={`p-1 rounded transition-all ${
+                          s.nextAction 
+                            ? 'text-amber-500 hover:text-amber-600' 
+                            : 'text-slate-300 hover:text-slate-400'
+                        }`}
+                        title={s.nextAction ? "Remove as next action" : "Set as next action"}
+                      >
+                        <Star className={`h-4 w-4 ${s.nextAction ? 'fill-current' : ''}`} />
+                      </button>
+                      <span className={`${s.status === "Done" ? "line-through text-slate-400" : ""} ${s.nextAction ? "font-medium text-slate-900" : ""}`}>
                         {s.title}
+                        {s.nextAction && <span className="ml-1 text-xs text-amber-600 font-semibold">(Next)</span>}
                       </span>
                     </div>
                     <div className="flex items-center gap-2">

@@ -3,7 +3,7 @@ import { supabase } from './supabase'
 /**
  * Service pour gérer les tâches Kanban avec Supabase
  * Structure de table attendue :
- * - tasks: id, title, priority, compartment, status, size, note, when, due_date, flagged, subtasks, user_id, created_at, updated_at
+ * - tasks: id, title, priority, compartment, status, size, note, when, due_date, start_date, hours, time_allocation, flagged, subtasks, completion, user_id, created_at, updated_at
  * - quick_tasks: id, title, user_id, created_at
  * 
  * Avec RLS (Row Level Security) activé pour sécuriser les données par utilisateur
@@ -43,8 +43,12 @@ export const taskService = {
         note: task.note || '',
         when: task.when || '',
         due_date: task.dueDate || null,
+        start_date: task.startDate || null,
+        hours: task.hours ? parseFloat(task.hours) : null,
+        time_allocation: task.timeAllocation || 'one shot',
         flagged: task.flagged || false,
         subtasks: task.subtasks || [],
+        completion: task.completion || 0,
         user_id: user.id
       }])
       .select()
@@ -68,8 +72,12 @@ export const taskService = {
     if ('note' in updates) updateData.note = updates.note
     if ('when' in updates) updateData.when = updates.when
     if ('dueDate' in updates) updateData.due_date = updates.dueDate || null
+    if ('startDate' in updates) updateData.start_date = updates.startDate || null
+    if ('hours' in updates) updateData.hours = updates.hours ? parseFloat(updates.hours) : null
+    if ('timeAllocation' in updates) updateData.time_allocation = updates.timeAllocation
     if ('flagged' in updates) updateData.flagged = updates.flagged
     if ('subtasks' in updates) updateData.subtasks = updates.subtasks
+    if ('completion' in updates) updateData.completion = updates.completion
 
     updateData.updated_at = new Date().toISOString()
 

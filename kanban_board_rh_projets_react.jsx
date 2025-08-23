@@ -26,6 +26,7 @@ import { Select, SelectTrigger, SelectContent, SelectItem } from "@/components/u
 // --- Constantes et helpers UI ---
 const COMPARTMENTS = ["PM", "CPO", "FER", "NOVAE", "MRH", "CDA"];
 const PRIORITIES = ["P1", "P2", "P3", "P4", "P5"];
+const PRIORITY_RANK = { P1: 1, P2: 2, P3: 3, P4: 4, P5: 5 };
 const STATUSES = ["À faire", "À analyser", "En cours", "Terminé"];
 const SIZES = ["S", "M", "L", "XL", "XXL"];
 const WHEN_OPTIONS = ["", "Aujourd'hui", "Cette semaine", "Semaine prochaine", "Ce mois-ci"];
@@ -308,6 +309,7 @@ export default function AppKanban() {
         dueDate: data.dueDate || "",
         flagged: !!data.flagged,
         subtasks: data.subtasks || [],
+        completion: data.completion || 0,
       };
       setTasks((prev) => ({ ...prev, [id]: t }));
       setOrder((prev) => {
@@ -499,7 +501,6 @@ export default function AppKanban() {
 }
 
 function TaskCard({ id, index, task, onEdit, onRemove, onToggleSubtask, onUpdate, groupBy }) {
-  const progress = (task.subtasks?.length || 0) === 0 ? 0 : Math.round(100 * (task.subtasks.filter((s) => s.status === "Terminé" || s.done === true).length) / (task.subtasks.length));
   return (
     <Draggable draggableId={id} index={index}>
       {(provided, snapshot) => (
@@ -570,6 +571,7 @@ function TaskModal({ onClose, onSave, onDelete, tasks, editingId, initialColumn,
   const [note, setNote] = useState(editing?.note || "");
   const [dueDate, setDueDate] = useState(editing?.dueDate || "");
   const [flagged, setFlagged] = useState(!!editing?.flagged);
+  const [completion, setCompletion] = useState(editing?.completion || 0);
   const normalizeSubtasks = (arr) => (arr || []).map((s) => s.status ? s : { ...s, status: s.done ? "Terminé" : "À faire" });
   const [subtasks, setSubtasks] = useState(normalizeSubtasks(editing?.subtasks || []));
   const [subInput, setSubInput] = useState("");
@@ -577,7 +579,7 @@ function TaskModal({ onClose, onSave, onDelete, tasks, editingId, initialColumn,
   function addSub() { if (!subInput.trim()) return; setSubtasks((s) => [...s, { id: uid(), title: subInput.trim(), status: "À faire" }]); setSubInput(""); }
   function removeSub(id) { setSubtasks((s) => s.filter((x) => x.id !== id)); }
   function toggleSubDone(id) { setSubtasks((s) => s.map((x) => x.id === id ? { ...x, done: !x.done } : x)); }
-  function submit(e) { e.preventDefault(); onSave({ id: editing?.id, title, priority, compartment, status, size, note, dueDate, flagged, subtasks, fromQuickId }); }
+  function submit(e) { e.preventDefault(); onSave({ id: editing?.id, title, priority, compartment, status, size, note, dueDate, flagged, subtasks, completion, fromQuickId }); }
 
   return (
     <div className="fixed inset-0 z-40 bg-black/40 flex items-center justify-center p-4" onMouseDown={(e)=>{ if(e.target===e.currentTarget) onClose(); }} onKeyDown={(e)=>{ if(e.key==='Escape') onClose(); }} tabIndex={-1}>
@@ -685,6 +687,38 @@ function TaskModal({ onClose, onSave, onDelete, tasks, editingId, initialColumn,
             <div>
               <label className="text-sm text-slate-600">Note</label>
               <textarea value={note} onChange={(e)=>setNote(e.target.value)} placeholder="Note interne (non affichée sur le board)" className="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2 h-28"></textarea>
+            </div>
+
+            <div>
+              <label className="text-sm text-slate-600 mb-3 block">Avancement de la tâche</label>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between text-sm">
+                  <span>0%</span>
+                  <span className="font-medium">{completion}%</span>
+                  <span>100%</span>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  step="10"
+                  value={completion}
+                  onChange={(e) => setCompletion(parseInt(e.target.value))}
+                  className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer slider"
+                />
+                <div className="flex justify-between text-xs text-slate-500">
+                  {[0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100].map((val) => (
+                    <button
+                      key={val}
+                      type="button"
+                      onClick={() => setCompletion(val)}
+                      className={`px-1 py-0.5 rounded ${completion === val ? 'bg-slate-900 text-white' : 'hover:bg-slate-100'}`}
+                    >
+                      {val}%
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
 
             <div>

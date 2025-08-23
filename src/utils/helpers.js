@@ -50,8 +50,12 @@ export const transformTaskFromDB = (dbTask) => {
     note: dbTask.note,
     when: WHEN_MAPPING[dbTask.when] || dbTask.when, // Normaliser le when
     dueDate: dbTask.due_date,
+    startDate: dbTask.start_date,
+    hours: dbTask.hours,
+    timeAllocation: dbTask.time_allocation,
     flagged: dbTask.flagged,
     subtasks: dbTask.subtasks || [],
+    completion: dbTask.completion || 0,
     createdAt: dbTask.created_at,
     updatedAt: dbTask.updated_at
   }
@@ -68,8 +72,12 @@ export const transformTaskToDB = (task) => {
     note: task.note || '',
     when: task.when || '',
     due_date: task.dueDate || null,
+    start_date: task.startDate || null,
+    hours: task.hours ? parseFloat(task.hours) : null,
+    time_allocation: task.timeAllocation || 'one shot',
     flagged: task.flagged || false,
-    subtasks: task.subtasks || []
+    subtasks: task.subtasks || [],
+    completion: task.completion || 0
   }
 }
 

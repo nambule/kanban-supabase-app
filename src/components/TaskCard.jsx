@@ -1,6 +1,6 @@
 import React from 'react'
 import { Draggable } from '@hello-pangea/dnd'
-import { AlertTriangle, Calendar as CalendarIcon, FileText } from 'lucide-react'
+import { AlertTriangle, Calendar as CalendarIcon, FileText, CheckSquare } from 'lucide-react'
 import { Select, SelectTrigger, SelectContent, SelectItem } from './ui/Select'
 import { 
   PRIORITY_STYLES, 
@@ -26,9 +26,7 @@ const TaskCard = ({
 }) => {
   if (!task) return null
 
-  const progress = (task.subtasks?.length || 0) === 0 
-    ? 0 
-    : Math.round(100 * (task.subtasks.filter((s) => s.status === "Done" || s.done === true).length) / (task.subtasks.length))
+  const completion = task.completion || 0
 
   const handleWhenChange = (newWhen) => {
     const value = newWhen === "__clear" ? "" : newWhen
@@ -102,7 +100,7 @@ const TaskCard = ({
           </div>
 
           {/* Indicateurs supplémentaires */}
-          {(task.flagged || task.dueDate || (task.note && task.note.trim())) && (
+          {(task.flagged || task.dueDate || (task.note && task.note.trim()) || (task.subtasks && task.subtasks.length > 0)) && (
             <div className="mt-2 flex items-center gap-3 text-xs text-slate-600 flex-wrap">
               {task.flagged && (
                 <span className="inline-flex items-center gap-1">
@@ -116,6 +114,12 @@ const TaskCard = ({
                   {formatDateFR(task.dueDate)}
                 </span>
               )}
+              {task.subtasks && task.subtasks.length > 0 && (
+                <span className="inline-flex items-center gap-1">
+                  <CheckSquare className="h-3.5 w-3.5" />
+                  {task.subtasks.filter(subtask => subtask.completed).length}/{task.subtasks.length}
+                </span>
+              )}
               {task.note && task.note.trim() && (
                 <span className="inline-flex items-center" title="Note">
                   <FileText className="h-3.5 w-3.5"/>
@@ -124,23 +128,21 @@ const TaskCard = ({
             </div>
           )}
 
-          {/* Barre de progression des sous-tâches */}
-          {task.subtasks && task.subtasks.length > 0 && (
-            <div className="mt-2 space-y-1">
-              <div className="flex items-center justify-between text-xs text-slate-500">
-                <span>Subtasks</span>
-                <span>{progress}%</span>
-              </div>
-              <div className="w-full bg-slate-200 rounded-full h-2">
-                <div 
-                  className={`h-2 rounded-full transition-all duration-300 ${
-                    progress === 100 ? 'bg-emerald-500' : progress > 0 ? 'bg-blue-500' : 'bg-slate-300'
-                  }`}
-                  style={{ width: `${progress}%` }}
-                ></div>
-              </div>
+          {/* Barre de progression de la tâche */}
+          <div className="mt-2 space-y-1">
+            <div className="flex items-center justify-between text-xs text-slate-500">
+              <span>Progress</span>
+              <span>{completion}%</span>
             </div>
-          )}
+            <div className="w-full bg-slate-200 rounded-full h-2">
+              <div 
+                className={`h-2 rounded-full transition-all duration-300 ${
+                  completion === 100 ? 'bg-emerald-500' : completion > 0 ? 'bg-blue-500' : 'bg-slate-300'
+                }`}
+                style={{ width: `${completion}%` }}
+              ></div>
+            </div>
+          </div>
 
           {/* Sélecteur "Quand" */}
           <div 
@@ -149,7 +151,7 @@ const TaskCard = ({
             onMouseDown={(e) => e.stopPropagation()} 
             onPointerDown={(e) => e.stopPropagation()}
           >
-            <div className="min-w-[150px]">
+            <div className="w-full flex justify-center">
               <Select 
                 value={task.when || ""} 
                 onValueChange={handleWhenChange}
@@ -157,7 +159,7 @@ const TaskCard = ({
               >
                 <SelectTrigger 
                   data-select-trigger
-                  className="inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-medium shadow-sm border-0 focus:outline-none focus:ring-2 focus:ring-slate-200 whitespace-nowrap" 
+                  className="inline-flex items-center justify-center gap-1 rounded-full px-3 py-1.5 text-xs font-medium shadow-sm border-0 focus:outline-none focus:ring-2 focus:ring-slate-200 whitespace-nowrap w-[120px]" 
                   style={styleWhen(task.when || "")}
                 >
                   <CalendarIcon className="h-3 w-3 opacity-70" />
