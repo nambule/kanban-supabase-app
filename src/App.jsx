@@ -4,7 +4,10 @@ import {
   Plus,
   Search,
   Filter as FilterIcon,
-  ChevronDown
+  ChevronDown,
+  Eye,
+  Moon,
+  Sun
 } from 'lucide-react'
 
 import { useTasks } from './hooks/useTasks'
@@ -35,6 +38,11 @@ import { badgeStyle, compStyle } from './utils/helpers'
 function App() {
   // État local de l'interface
   const [groupBy, setGroupBy] = useState("compartment")
+  const [viewMode, setViewMode] = useState("full")
+  const [darkMode, setDarkMode] = useState(() => {
+    const saved = localStorage.getItem('kanban-dark-mode')
+    return saved ? JSON.parse(saved) : false
+  })
   const [search, setSearch] = useState("")
   const [priorityFilter, setPriorityFilter] = useState({ 
     P1: true, P2: true, P3: true, P4: true, P5: true 
@@ -48,6 +56,16 @@ function App() {
   })
   const [quickOpen, setQuickOpen] = useState(false)
   const [authOpen, setAuthOpen] = useState(false)
+
+  // Gestion du mode sombre
+  useEffect(() => {
+    localStorage.setItem('kanban-dark-mode', JSON.stringify(darkMode))
+    if (darkMode) {
+      document.documentElement.classList.add('dark')
+    } else {
+      document.documentElement.classList.remove('dark')
+    }
+  }, [darkMode])
 
   // Hook d'authentification
   const { 
@@ -80,24 +98,38 @@ function App() {
     removeQuickTask 
   } = useQuickTasks()
 
-  // Référence pour fermer les filtres
+  // Référence pour fermer les filtres et menu visualisation
   const filterRef = useRef(null)
+  const viewRef = useRef(null)
 
-  // Fermer les filtres au clic extérieur ou Escape
+  // Fermer les filtres et menu visualisation au clic extérieur ou Escape
   useEffect(() => {
     function onDocMouseDown(e) {
-      const el = filterRef.current
-      if (el && el.open && !el.contains(e.target)) {
-        try { el.open = false } catch(_) {}
-        el.removeAttribute('open')
+      const filterEl = filterRef.current
+      const viewEl = viewRef.current
+      
+      if (filterEl && filterEl.open && !filterEl.contains(e.target)) {
+        try { filterEl.open = false } catch(_) {}
+        filterEl.removeAttribute('open')
+      }
+      
+      if (viewEl && viewEl.open && !viewEl.contains(e.target)) {
+        try { viewEl.open = false } catch(_) {}
+        viewEl.removeAttribute('open')
       }
     }
     function onKey(e) {
       if (e.key === 'Escape') {
-        const el = filterRef.current
-        if (el && el.open) { 
-          try { el.open = false } catch(_) {} 
-          el.removeAttribute('open') 
+        const filterEl = filterRef.current
+        const viewEl = viewRef.current
+        
+        if (filterEl && filterEl.open) { 
+          try { filterEl.open = false } catch(_) {} 
+          filterEl.removeAttribute('open') 
+        }
+        if (viewEl && viewEl.open) { 
+          try { viewEl.open = false } catch(_) {} 
+          viewEl.removeAttribute('open') 
         }
       }
     }
@@ -232,8 +264,8 @@ function App() {
   // Affichage du chargement de l'authentification
   if (authLoading) {
     return (
-      <div className="min-h-screen w-full bg-slate-50 flex items-center justify-center">
-        <div className="text-slate-600">Loading...</div>
+      <div className="min-h-screen w-full bg-slate-50 dark:bg-slate-900 flex items-center justify-center">
+        <div className="text-slate-600 dark:text-slate-400">Loading...</div>
       </div>
     )
   }
@@ -241,15 +273,15 @@ function App() {
   // Redirection vers l'authentification si pas connecté
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen w-full bg-slate-50 flex items-center justify-center">
+      <div className="min-h-screen w-full bg-slate-50 dark:bg-slate-900 flex items-center justify-center">
         <div className="text-center space-y-6 p-8">
           <div>
-            <h1 className="text-3xl font-bold text-slate-900 mb-2">My Kanban Board</h1>
-            <p className="text-slate-600">Organize your tasks efficiently</p>
+            <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">My Kanban Board</h1>
+            <p className="text-slate-600 dark:text-slate-400">Organize your tasks efficiently</p>
           </div>
           <button 
             onClick={() => setAuthOpen(true)}
-            className="px-6 py-3 rounded-xl bg-slate-900 text-white hover:bg-slate-800 font-medium"
+            className="px-6 py-3 rounded-xl bg-slate-900 dark:bg-slate-700 text-white hover:bg-slate-800 dark:hover:bg-slate-600 font-medium transition-colors"
           >
             Sign In
           </button>
@@ -270,8 +302,8 @@ function App() {
   // Affichage du chargement des tâches
   if (tasksLoading) {
     return (
-      <div className="min-h-screen w-full bg-slate-50 flex items-center justify-center">
-        <div className="text-slate-600">Loading...</div>
+      <div className="min-h-screen w-full bg-slate-50 dark:bg-slate-900 flex items-center justify-center">
+        <div className="text-slate-600 dark:text-slate-400">Loading...</div>
       </div>
     )
   }
@@ -279,8 +311,8 @@ function App() {
   // Affichage des erreurs
   if (tasksError || quickError) {
     return (
-      <div className="min-h-screen w-full bg-slate-50 flex items-center justify-center">
-        <div className="text-red-600">
+      <div className="min-h-screen w-full bg-slate-50 dark:bg-slate-900 flex items-center justify-center">
+        <div className="text-red-600 dark:text-red-400">
           Error: {tasksError || quickError}
         </div>
       </div>
@@ -288,31 +320,31 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen w-full bg-slate-50">
+    <div className="min-h-screen w-full bg-slate-50 dark:bg-slate-900 transition-colors">
       {/* Barre supérieure */}
-      <header className="sticky top-0 z-20 backdrop-blur bg-white/80 border-b border-slate-200">
+      <header className="sticky top-0 z-20 backdrop-blur bg-white/80 dark:bg-slate-900/80 border-b border-slate-200 dark:border-slate-700">
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center gap-3">
-          <div className="text-xl font-semibold tracking-tight">My Board</div>
+          <div className="text-xl font-semibold tracking-tight text-slate-900 dark:text-white">My Board</div>
 
           <div className="ml-auto flex items-center gap-2">
             {/* Recherche */}
             <div className="relative">
-              <Search className="absolute left-2 top-2.5 h-4 w-4 text-slate-400" />
+              <Search className="absolute left-2 top-2.5 h-4 w-4 text-slate-400 dark:text-slate-500" />
               <input 
                 value={search} 
                 onChange={(e) => setSearch(e.target.value)} 
                 placeholder="Search…"
-                className="pl-8 pr-3 py-2 rounded-xl bg-slate-100 focus:bg-white border border-transparent focus:border-slate-300 outline-none text-sm" 
+                className="pl-8 pr-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 focus:bg-white dark:focus:bg-slate-700 border border-transparent focus:border-slate-300 dark:focus:border-slate-600 outline-none text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500" 
               />
             </div>
 
             {/* Filtres */}
             <details ref={filterRef} className="relative">
-              <summary className="list-none select-none inline-flex items-center gap-1 px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-sm cursor-pointer">
+              <summary className="list-none select-none inline-flex items-center gap-1 px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-sm cursor-pointer text-slate-900 dark:text-white">
                 <FilterIcon className="h-4 w-4" /> Filters <ChevronDown className="h-4 w-4" />
               </summary>
-              <div className="absolute right-0 mt-2 w-64 rounded-xl border border-slate-200 bg-white p-3 shadow-xl z-30">
-                <div className="text-xs font-medium uppercase text-slate-500 mb-2">Priority</div>
+              <div className="absolute right-0 mt-2 w-64 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-3 shadow-xl z-30">
+                <div className="text-xs font-medium uppercase text-slate-500 dark:text-slate-400 mb-2">Priority</div>
                 {PRIORITIES.map((p) => (
                   <label key={p} className="flex items-center gap-2 py-1 text-sm">
                     <input 
@@ -348,7 +380,7 @@ function App() {
                   <div className="text-xs text-slate-500">Reset filters</div>
                   <button 
                     onClick={resetFilters} 
-                    className="text-xs px-2 py-1 rounded-lg bg-slate-100 hover:bg-slate-200"
+                    className="text-xs px-2 py-1 rounded-lg bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-900 dark:text-white transition-colors"
                   >
                     Reset
                   </button>
@@ -358,11 +390,11 @@ function App() {
 
             {/* Groupement */}
             <div className="inline-flex items-center gap-2 text-sm">
-              <span className="text-slate-500">Group by</span>
+              <span className="text-slate-500 dark:text-slate-400">Group by</span>
               <select 
                 value={groupBy} 
                 onChange={(e) => setGroupBy(e.target.value)} 
-                className="px-2 py-2 rounded-xl bg-slate-100 hover:bg-slate-200"
+                className="px-2 py-2 rounded-xl bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-900 dark:text-white"
               >
                 <option value="compartment">Compartment</option>
                 <option value="priority">Priority</option>
@@ -372,11 +404,11 @@ function App() {
 
             {/* Tri */}
             <div className="inline-flex items-center gap-2 text-sm">
-              <span className="text-slate-500">Sort</span>
+              <span className="text-slate-500 dark:text-slate-400">Sort</span>
               <select 
                 value={sortBy} 
                 onChange={(e) => setSortBy(e.target.value)} 
-                className="px-2 py-2 rounded-xl bg-slate-100 hover:bg-slate-200"
+                className="px-2 py-2 rounded-xl bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-900 dark:text-white"
               >
                 <option value="none">None</option>
                 <option value="priorityAsc">P1→P5</option>
@@ -386,10 +418,64 @@ function App() {
               </select>
             </div>
 
+            {/* View Mode & Dark Mode */}
+            <details ref={viewRef} className="relative">
+              <summary className="list-none select-none inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-sm cursor-pointer text-slate-900 dark:text-white">
+                <Eye className="h-4 w-4 text-slate-500 dark:text-slate-400" />
+                <span>View</span>
+                <ChevronDown className="h-4 w-4" />
+              </summary>
+              <div className="absolute right-0 mt-2 w-48 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-3 shadow-xl z-50">
+                <div className="text-xs font-medium uppercase text-slate-500 dark:text-slate-400 mb-2">Display Mode</div>
+                <div className="space-y-2 mb-4">
+                  {[
+                    { value: "compact", label: "Compact", desc: "Title + Priority only" },
+                    { value: "standard", label: "Standard", desc: "Everything except when selector" },
+                    { value: "full", label: "Full", desc: "All elements visible" }
+                  ].map((mode) => (
+                    <label key={mode.value} className="flex items-start gap-2 py-1 cursor-pointer">
+                      <input 
+                        type="radio" 
+                        name="viewMode" 
+                        value={mode.value}
+                        checked={viewMode === mode.value}
+                        onChange={(e) => setViewMode(e.target.value)}
+                        className="mt-0.5"
+                      />
+                      <div className="text-sm">
+                        <div className="font-medium text-slate-900 dark:text-white">{mode.label}</div>
+                        <div className="text-xs text-slate-500 dark:text-slate-400">{mode.desc}</div>
+                      </div>
+                    </label>
+                  ))}
+                </div>
+                
+                <div className="border-t border-slate-200 dark:border-slate-700 pt-3">
+                  <div className="text-xs font-medium uppercase text-slate-500 dark:text-slate-400 mb-2">Theme</div>
+                  <button
+                    onClick={() => setDarkMode(!darkMode)}
+                    className="flex items-center gap-2 w-full px-2 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-sm transition-colors"
+                  >
+                    {darkMode ? (
+                      <>
+                        <Sun className="h-4 w-4 text-slate-500 dark:text-slate-400" />
+                        <span className="text-slate-900 dark:text-white">Switch to Light Mode</span>
+                      </>
+                    ) : (
+                      <>
+                        <Moon className="h-4 w-4 text-slate-500" />
+                        <span className="text-slate-900">Switch to Dark Mode</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            </details>
+
             {/* Tâche rapide */}
             <button 
               onClick={() => setQuickOpen(true)} 
-              className="relative inline-flex items-center gap-1 text-sm px-3 py-2 rounded-xl bg-slate-900 text-white hover:bg-slate-800"
+              className="relative inline-flex items-center gap-1 text-sm px-3 py-2 rounded-xl bg-slate-900 dark:bg-slate-700 text-white hover:bg-slate-800 dark:hover:bg-slate-600 transition-colors"
             >
 Quick Task
               {quickTasks.length > 0 && (
@@ -414,7 +500,7 @@ Quick Task
           >
             {displayedColumns.map((col) => (
               <div key={col} className="flex flex-col">
-                <div className="mb-2 rounded-2xl border overflow-hidden shadow-sm">
+                <div className="mb-2 rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden shadow-sm bg-white dark:bg-slate-800">
                   {/* En-tête de colonne */}
                   <div 
                     className="flex items-center justify-between px-2 py-1.5" 
@@ -424,16 +510,16 @@ Quick Task
                     }
                   >
                     <div className="flex items-center gap-2">
-                      <div className={`font-semibold ${groupBy === 'compartment' ? '' : 'text-slate-700'}`}>
+                      <div className={`font-semibold ${groupBy === 'compartment' ? '' : 'text-slate-700 dark:text-slate-300'}`}>
                         {col}
                       </div>
-                      <span className={`text-xs ${groupBy === 'compartment' ? 'opacity-70' : 'text-slate-400'}`}>
+                      <span className={`text-xs ${groupBy === 'compartment' ? 'opacity-70' : 'text-slate-400 dark:text-slate-500'}`}>
                         {visibleIdsByColumn[col]?.length || 0}
                       </span>
                     </div>
                     <button 
                       onClick={() => openCreate(col)} 
-                      className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs bg-slate-100 hover:bg-slate-200"
+                      className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-900 dark:text-white transition-colors"
                     >
                       <Plus className="h-4 w-4" /> Add
                     </button>
@@ -446,7 +532,7 @@ Quick Task
                         ref={provided.innerRef} 
                         {...provided.droppableProps}
                         className={`min-h-[120px] p-2 relative ${
-                          snapshot.isDraggingOver ? 'bg-slate-100' : 'bg-white'
+                          snapshot.isDraggingOver ? 'bg-slate-100 dark:bg-slate-700' : 'bg-white dark:bg-slate-800'
                         }`}
                         style={{ overflow: 'visible' }}
                       >
@@ -458,7 +544,8 @@ Quick Task
                             task={tasks[id]} 
                             onEdit={() => openEdit(id)} 
                             onUpdate={updateTask}
-                            groupBy={groupBy} 
+                            groupBy={groupBy}
+                            viewMode={viewMode}
                           />
                         ))}
                         {provided.placeholder}

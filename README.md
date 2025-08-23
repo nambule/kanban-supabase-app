@@ -1,135 +1,229 @@
-# Kanban App avec Supabase
+# Kanban Task Management Board
 
-Une application Kanban moderne construite avec React et Supabase, basée sur votre code original mais restructurée selon les meilleures pratiques d'architecture web.
+A modern, full-featured Kanban board application built with React, Supabase, and TailwindCSS. Features a clean, professional interface with advanced task management capabilities and real-time collaboration.
 
-## 🚀 Fonctionnalités
+## ✨ Features
 
-- ✅ Gestion des tâches Kanban avec drag & drop
-- ✅ Groupement par compartiment, priorité ou statut
-- ✅ Système de filtres avancés
-- ✅ Tâches rapides pour l'ajout express
-- ✅ Sous-tâches avec suivi d'avancement
-- ✅ Stockage persistant avec Supabase
-- ✅ Interface responsive avec TailwindCSS
+### Core Functionality
+- 🎯 **Drag & Drop Kanban Board** - Intuitive task management with smooth animations
+- 📊 **Multiple View Modes** - Group tasks by compartment, priority, or status
+- 🔍 **Advanced Filtering** - Filter by priority, status with quick reset options
+- ⚡ **Quick Tasks** - Express task creation for rapid capture
+- 📝 **Rich Task Details** - Comprehensive task information with progress tracking
+- 🎨 **Multiple Display Modes** - Compact, Standard, and Full view options
+- 🌙 **Dark Mode** - Beautiful dark theme with smooth transitions
+
+### Task Management
+- ✅ **Subtasks** - Break down complex tasks with completion tracking (X/Y format)
+- 📅 **Due Dates** - Visual indicators with overdue highlighting
+- ⚠️ **Risk Flagging** - Mark tasks as at-risk with warning indicators  
+- 📊 **Progress Tracking** - Visual progress bars with percentage completion
+- 📋 **Task Notes** - Internal notes and documentation
+- ⏰ **Time Planning** - "When" scheduling with color-coded indicators
+- 🏷️ **Priority System** - 5-level priority system (P1-P5) with visual badges
+- 📏 **Size Estimation** - T-shirt sizing (S, M, L, XL, XXL)
+
+### User Experience
+- 🔐 **Authentication** - Secure user accounts with Supabase Auth
+- 💾 **Real-time Sync** - Automatic saving with cloud persistence
+- 📱 **Responsive Design** - Works beautifully on all screen sizes
+- ⌨️ **Keyboard Navigation** - Full keyboard support for accessibility
+- 🎭 **Theme Switching** - Light/dark mode with persistent preferences
 
 ## 🏗️ Architecture
 
-L'application a été restructurée pour suivre les bonnes pratiques :
+The application follows modern React best practices with a clean, modular architecture:
 
 ```
 src/
-├── components/          # Composants UI réutilisables
-│   ├── ui/             # Composants d'interface de base
-│   ├── TaskCard.jsx    # Carte d'affichage des tâches
-│   ├── TaskModal.jsx   # Modale d'édition des tâches
-│   └── QuickTasksModal.jsx # Modale des tâches rapides
-├── hooks/              # Hooks personnalisés
-│   ├── useTasks.js     # Gestion des tâches
-│   └── useQuickTasks.js # Gestion des tâches rapides
-├── services/           # Services et API
-│   ├── supabase.js     # Configuration Supabase
-│   └── taskService.js  # Service de gestion des tâches
-├── utils/              # Utilitaires et helpers
-│   ├── constants.js    # Constantes de l'app
-│   └── helpers.js      # Fonctions utilitaires
-└── App.jsx            # Composant principal
+├── components/              # Reusable UI components
+│   ├── ui/                 # Base UI components
+│   │   ├── Select.jsx      # Custom select dropdown
+│   │   └── DateRangePicker.jsx # Date range picker
+│   ├── TaskCard.jsx        # Individual task display
+│   ├── TaskModal.jsx       # Task creation/editing modal
+│   ├── QuickTasksModal.jsx # Quick task creation
+│   ├── AuthModal.jsx       # Authentication modal
+│   └── AccountMenu.jsx     # User account management
+├── hooks/                  # Custom React hooks
+│   ├── useTasks.js         # Task management logic
+│   ├── useQuickTasks.js    # Quick tasks management
+│   └── useAuth.js          # Authentication logic
+├── services/               # API and external services
+│   ├── supabase.js         # Supabase client configuration
+│   └── taskService.js      # Task CRUD operations
+├── utils/                  # Utilities and helpers
+│   ├── constants.js        # App-wide constants
+│   └── helpers.js          # Utility functions
+└── App.jsx                # Main application component
 ```
 
-## 🛠️ Installation
+## 🚀 Quick Start
 
-1. **Cloner et installer les dépendances :**
+### Prerequisites
+- Node.js 16+ and npm
+- Supabase account
+
+### Installation
+
+1. **Clone and install dependencies:**
    ```bash
+   git clone <your-repo-url>
+   cd kanban
    npm install
    ```
 
-2. **Configurer Supabase :**
-   - Créez un projet sur [Supabase](https://supabase.com)
-   - Exécutez le script SQL `supabase-schema.sql` dans l'éditeur SQL
-   - Copiez `.env.example` vers `.env` et remplissez vos credentials :
+2. **Set up Supabase:**
+   - Create a new project at [Supabase](https://supabase.com)
+   - Run the SQL schema files in the Supabase SQL editor:
+     - `supabase-schema.sql` (main tables)
+     - `supabase-setup.sql` (additional setup)
+   - Copy `.env.example` to `.env` and add your credentials:
    ```env
-   VITE_SUPABASE_URL=your_supabase_url_here
-   VITE_SUPABASE_ANON_KEY=your_supabase_anon_key_here
+   VITE_SUPABASE_URL=your_supabase_project_url
+   VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
    ```
 
-3. **Lancer l'application :**
+3. **Start the development server:**
    ```bash
    npm run dev
    ```
 
-## 📊 Base de données
+4. **Open your browser:**
+   Navigate to `http://localhost:5173`
 
-### Tables Supabase
+## 📊 Database Schema
 
-**`tasks`** - Tâches principales :
-- `id` (UUID, PK)
-- `title` (TEXT) - Titre de la tâche
-- `priority` (TEXT) - P1, P2, P3, P4, P5
-- `compartment` (TEXT) - PM, CPO, FER, NOVAE, MRH, CDA
-- `status` (TEXT) - À faire, À analyser, En cours, Terminé
-- `size` (TEXT) - S, M, L, XL, XXL
-- `note` (TEXT) - Note interne
-- `when` (TEXT) - Planification temporelle
-- `due_date` (DATE) - Date d'échéance
-- `flagged` (BOOLEAN) - Marqué comme à risque
-- `subtasks` (JSONB) - Sous-tâches au format JSON
-- `created_at`, `updated_at` (TIMESTAMP)
+### Main Tables
 
-**`quick_tasks`** - Tâches rapides :
-- `id` (UUID, PK)
-- `title` (TEXT)
-- `created_at` (TIMESTAMP)
+**`tasks`** - Primary task storage:
+```sql
+- id (UUID, Primary Key)
+- title (TEXT) - Task title
+- priority (TEXT) - P1, P2, P3, P4, P5
+- compartment (TEXT) - PM, CPO, FER, NOVAE, MRH, CDA
+- status (TEXT) - To Do, To Analyze, In Progress, Done
+- size (TEXT) - S, M, L, XL, XXL
+- note (TEXT) - Internal notes
+- when (TEXT) - Time planning
+- due_date (DATE) - Due date
+- start_date (DATE) - Start date
+- hours (NUMERIC) - Estimated hours
+- time_allocation (TEXT) - one shot, per week, per 2 weeks
+- flagged (BOOLEAN) - Risk flag
+- subtasks (JSONB) - Subtasks array
+- completion (INTEGER) - Progress percentage (0-100)
+- user_id (UUID) - User reference
+- created_at, updated_at (TIMESTAMP)
+```
 
-## 🔧 Développement
+**`quick_tasks`** - Quick task capture:
+```sql
+- id (UUID, Primary Key)
+- title (TEXT) - Task title
+- user_id (UUID) - User reference
+- created_at (TIMESTAMP)
+```
 
-### Hooks personnalisés
+## 🎨 Customization
 
-- **`useTasks()`** : Gère les tâches principales (CRUD + drag & drop)
-- **`useQuickTasks()`** : Gère les tâches rapides
+### View Modes
+- **Compact**: Title + Priority + Progress only
+- **Standard**: All elements except "when" selector
+- **Full**: All elements including interactive "when" planning
 
-### Services
+### Theme System
+- **Light Mode**: Clean, professional appearance
+- **Dark Mode**: Easy on the eyes with high contrast
+- **System Integration**: Respects user OS preferences
 
-- **`taskService`** : Interface avec l'API Supabase pour les tâches
-- **`supabase`** : Configuration du client Supabase
+### Color Coding
+All colors and styles are centralized in `src/utils/constants.js`:
+- Priority colors (P1-P5)
+- Status colors (To Do, In Progress, etc.)
+- Compartment colors (PM, CPO, etc.)
+- Size indicators
+- Time planning colors
 
-### Composants
+## 🛠️ Development
 
-- **`TaskCard`** : Affichage d'une tâche avec drag & drop
-- **`TaskModal`** : Création/édition de tâches
-- **`QuickTasksModal`** : Gestion des tâches rapides
-- **`Select`** : Composant de sélection personnalisé
+### Key Hooks
 
-## 🎨 Personnalisation
+- **`useTasks()`**: Complete task management (CRUD, drag & drop, filtering)
+- **`useQuickTasks()`**: Quick task capture and classification
+- **`useAuth()`**: User authentication and session management
 
-Les couleurs et styles sont centralisés dans `src/utils/constants.js` :
-- Couleurs des priorités, statuts, compartiments
-- Configuration des options temporelles
-- Styles d'interface
+### Core Services
 
-## 🚦 Migration depuis l'ancien code
+- **`taskService`**: Supabase API interface for all task operations
+- **`supabase`**: Configured client with authentication
 
-L'application conserve toutes les fonctionnalités de votre code original :
-- ✅ Même interface utilisateur
-- ✅ Même système de groupement et filtres
-- ✅ Même gestion des priorités et statuts
-- ✅ Drag & drop identique
-- ✅ Tâches rapides conservées
+### Component Architecture
 
-**Changements principaux :**
-- 🔄 LocalStorage → Supabase pour la persistance
-- 🏗️ Code divisé en composants modulaires
-- 🎣 Logique métier dans des hooks personnalisés
-- 🔧 Services dédiés pour l'API
+- **Modular Design**: Each component has a single responsibility
+- **Prop Drilling Avoided**: Uses custom hooks for state management
+- **Performance Optimized**: Memoization and efficient re-renders
+- **Accessible**: Full keyboard navigation and screen reader support
 
-## 🔒 Sécurité
+## 🔒 Security & Authentication
 
-⚠️ **Important** : Le schéma SQL fourni utilise des politiques RLS permissives pour la démonstration. En production, implémentez une authentification appropriée et des politiques de sécurité strictes.
+- **Row Level Security (RLS)**: Supabase policies ensure users only see their own data
+- **JWT Authentication**: Secure, stateless authentication
+- **SQL Injection Protection**: Parameterized queries through Supabase client
+- **CORS Configured**: Proper cross-origin request handling
 
-## 📝 Scripts disponibles
+## 📱 Deployment
 
-- `npm run dev` - Serveur de développement
-- `npm run build` - Build de production
-- `npm run preview` - Aperçu du build
+### Build for Production
+```bash
+npm run build
+```
 
-## 🤝 Support
+### Deploy to Vercel (Recommended)
+1. Connect your GitHub repository to Vercel
+2. Add environment variables in Vercel dashboard
+3. Deploy automatically on every push
 
-Si vous avez des questions sur l'implémentation ou souhaitez des modifications, n'hésitez pas à demander !
+### Manual Deployment
+```bash
+npm run build
+# Upload dist/ folder to your hosting provider
+```
+
+## 🎯 Usage Tips
+
+### Workflow Optimization
+1. **Start with Quick Tasks** - Capture ideas rapidly
+2. **Classify Quick Tasks** - Convert to full tasks when ready
+3. **Use View Modes** - Switch between compact/full based on needs
+4. **Leverage Filtering** - Focus on what matters most
+5. **Track Progress** - Update completion percentages regularly
+
+### Keyboard Shortcuts
+- **Enter/Space**: Open task details when focused
+- **Escape**: Close modals and dropdowns
+- **Tab**: Navigate through interface elements
+
+## 🤝 Contributing
+
+This is a professional task management application. For feature requests or bug reports:
+
+1. Check existing issues
+2. Create detailed bug reports with steps to reproduce
+3. Suggest improvements with clear use cases
+4. Follow the existing code style and architecture
+
+## 📄 License
+
+This project is private and proprietary. All rights reserved.
+
+## 🆘 Support
+
+For technical support or questions about implementation:
+- Review the code documentation
+- Check the database schema files
+- Examine the component structure in `/src`
+
+---
+
+**Built with ❤️ using React, Supabase, and TailwindCSS**

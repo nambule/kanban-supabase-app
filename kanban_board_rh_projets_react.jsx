@@ -8,7 +8,9 @@ import {
   AlertTriangle,
   X,
   ChevronDown,
-  FileText
+  FileText,
+  Eye,
+  CheckSquare
 } from "lucide-react";
 import { Select, SelectTrigger, SelectContent, SelectItem } from "@/components/ui/select";
 
@@ -143,6 +145,7 @@ export default function AppKanban() {
   const [tasks, setTasks] = useState({});
   const [order, setOrder] = useState(emptyOrder());
   const [groupBy, setGroupBy] = useState("compartment"); // "compartment" | "priority" | "status"
+  const [viewMode, setViewMode] = useState("full"); // "compact" | "standard" | "full"
   const [search, setSearch] = useState("");
   const [priorityFilter, setPriorityFilter] = useState({ P1: true, P2: true, P3: true, P4: true, P5: true });
   const [statusFilterState, setStatusFilterState] = useState({ "À faire": true, "À analyser": true, "En cours": true, "Terminé": false });
@@ -432,6 +435,16 @@ export default function AppKanban() {
                 </select>
               </div>
 
+              {/* View Mode */}
+              <div className="inline-flex items-center gap-2 text-sm">
+                <Eye className="h-4 w-4 text-slate-500" />
+                <select value={viewMode} onChange={(e) => setViewMode(e.target.value)} className="px-2 py-2 rounded-xl bg-slate-100 hover:bg-slate-200">
+                  <option value="compact">Compact</option>
+                  <option value="standard">Standard</option>
+                  <option value="full">Full</option>
+                </select>
+              </div>
+
               <button onClick={() => setQuickOpen(true)} className="inline-flex items-center gap-1 text-sm px-3 py-2 rounded-xl bg-slate-900 text-white hover:bg-slate-800">Tâche rapide</button>
             </div>
         </div>
@@ -460,7 +473,7 @@ export default function AppKanban() {
                         className={`min-h-[120px] p-2 ${snapshot.isDraggingOver ? 'bg-slate-100' : 'bg-white'}`}
                       >
                         {(visibleIdsByColumn[col] || []).map((id, index) => (
-                          <TaskCard key={id} id={id} index={index} task={tasks[id]} onEdit={() => openEdit(id)} onRemove={() => removeTask(id)} onToggleSubtask={toggleSubtask} onUpdate={updateTask} groupBy={groupBy} />
+                          <TaskCard key={id} id={id} index={index} task={tasks[id]} onEdit={() => openEdit(id)} onRemove={() => removeTask(id)} onToggleSubtask={toggleSubtask} onUpdate={updateTask} groupBy={groupBy} viewMode={viewMode} />
                         ))}
                         {provided.placeholder}
                       </div>
@@ -500,61 +513,96 @@ export default function AppKanban() {
   );
 }
 
-function TaskCard({ id, index, task, onEdit, onRemove, onToggleSubtask, onUpdate, groupBy }) {
+function TaskCard({ id, index, task, onEdit, onRemove, onToggleSubtask, onUpdate, groupBy, viewMode }) {
   return (
     <Draggable draggableId={id} index={index}>
       {(provided, snapshot) => (
         <div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps} onClick={onEdit} role="button" tabIndex={0} onKeyDown={(e)=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); onEdit(); } }}
           className={`group cursor-pointer mb-2 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm hover:shadow-md transition-shadow ${snapshot.isDragging ? "ring-2 ring-slate-300" : ""}`}
         >
-          {(groupBy === "priority" || groupBy === "status") && (
+          {/* Compartment banner for priority/status grouping */}
+          {viewMode !== "compact" && (groupBy === "priority" || groupBy === "status") && (
               <div className="mb-2 -mx-3 -mt-3 px-3 py-1.5 rounded-t-2xl border-b" style={compStyle(COMPARTMENT_COLORS[task.compartment] || COMPARTMENT_COLORS.PM)}>
                 <span className="text-xs font-medium tracking-wide">{task.compartment}</span>
               </div>
             )}
+
+          {/* Title and Priority - Always visible */}
           <div className="flex items-start gap-2 mb-2">
             <span className={`inline-flex items-center gap-2 px-2 py-0.5 rounded-md border text-xs ${priorityStyles[task.priority]}`}>
               <span className={`h-2 w-2 rounded-full ${priorityDot[task.priority]}`}></span>
               {task.priority}
             </span>
-            
             <div className="flex-1 text-sm font-medium text-slate-800 break-words">{task.title}</div>
-            
           </div>
 
-          <div className="flex items-center gap-3 text-xs text-slate-600 flex-wrap">
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-xs" style={badgeStyle(STATUS_COLORS[task.status])}>{task.status}</span>
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-xs" style={badgeStyle(SIZE_COLORS[task.size])}>{task.size}</span>
-          </div>
-          {(task.flagged || task.dueDate || (task.note && task.note.trim())) && (
+          {/* Status and Size badges - Hidden in compact mode */}
+          {viewMode !== "compact" && (
+            <div className="flex items-center gap-3 text-xs text-slate-600 flex-wrap">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-xs" style={badgeStyle(STATUS_COLORS[task.status])}>{task.status}</span>
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-xs" style={badgeStyle(SIZE_COLORS[task.size])}>{task.size}</span>
+            </div>
+          )}
+
+          {/* Risk, Due Date, Subtask count, Note - Hidden in compact mode */}
+          {viewMode !== "compact" && (task.flagged || task.dueDate || (task.subtasks && task.subtasks.length > 0) || (task.note && task.note.trim())) && (
             <div className="mt-2 flex items-center gap-3 text-xs text-slate-600 flex-wrap">
               {task.flagged && (<span className="inline-flex items-center gap-1"><AlertTriangle className="h-3.5 w-3.5 text-red-500" />Risque</span>)}
               {task.dueDate && (<span className={`inline-flex items-center gap-1 ${isPast(task.dueDate) ? "text-red-600" : ""}`}><CalendarIcon className="h-3.5 w-3.5" />{formatDateFR(task.dueDate)}</span>)}
+              {task.subtasks && task.subtasks.length > 0 && (
+                <span className="inline-flex items-center gap-1">
+                  <CheckSquare className="h-3.5 w-3.5" />
+                  {task.subtasks.filter(subtask => subtask.status === "Terminé").length}/{task.subtasks.length}
+                </span>
+              )}
               {task.note && task.note.trim() && (<span className="inline-flex items-center" title="Note"><FileText className="h-3.5 w-3.5"/></span>)}
             </div>
           )}
-          {/* Quand (éditable sur la carte) */}
-          <div className="mt-3 pt-3 border-t border-slate-100 flex items-center justify-center" onClick={(e)=>e.stopPropagation()} onMouseDown={(e)=>e.stopPropagation()} onPointerDown={(e)=>e.stopPropagation()}>
-            <div className="min-w-[150px]">
-              <Select value={task.when || ""} onValueChange={(v)=> onUpdate(id, { when: v === "__clear" ? "" : v })}>
-                <SelectTrigger className="inline-flex items-center gap-1 rounded-full px-1.5 pr-3 py-0 text-[9px] leading-none font-medium shadow-sm border-0 focus:outline-none focus:ring-2 focus:ring-slate-200 whitespace-nowrap" style={styleWhen(task.when || "")}>
-                  <CalendarIcon className="h-3 w-3 opacity-70" />
-                  <span>{task.when || "A définir"}</span>
-                </SelectTrigger>
-                <SelectContent className="rounded-xl border border-slate-200">
-                  {/* Option de vidage : valeur spéciale puis mappée vers "" dans onValueChange */}
-                  <SelectItem value="__clear"><span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full" style={styleWhen("")}><CalendarIcon className="h-3 w-3 opacity-70" />A définir</span></SelectItem>
-                  {WHEN_OPTIONS.filter(x=>x!=="").map((opt)=>(
-                    <SelectItem key={opt} value={opt}>
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full" style={styleWhen(opt)}>
-                        <CalendarIcon className="h-3 w-3 opacity-70" />{opt}
-                      </span>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+
+          {/* Progress bar - Visible in all modes */}
+          <div className="mt-2 space-y-1">
+            <div className="flex items-center justify-between text-xs text-slate-500">
+              <span>Progress</span>
+              <span>{task.completion || 0}%</span>
+            </div>
+            <div className="w-full bg-slate-200 rounded-full h-2">
+              <div 
+                className={`h-2 rounded-full transition-all duration-300 ${
+                  (task.completion || 0) === 100 ? 'bg-emerald-500' : (task.completion || 0) > 0 ? 'bg-blue-500' : 'bg-slate-300'
+                }`}
+                style={{ width: `${task.completion || 0}%` }}
+              ></div>
             </div>
           </div>
+
+          {/* When selector - Only visible in full mode */}
+          {viewMode === "full" && (
+            <div className="mt-3 pt-3 border-t border-slate-100 flex items-center justify-center" onClick={(e)=>e.stopPropagation()} onMouseDown={(e)=>e.stopPropagation()} onPointerDown={(e)=>e.stopPropagation()}>
+              <div className="w-full flex justify-center">
+                <Select value={task.when || ""} onValueChange={(v)=> onUpdate(id, { when: v === "__clear" ? "" : v })}>
+                  <SelectTrigger className="inline-flex items-center justify-center gap-1 rounded-full px-3 py-1.5 text-xs font-medium shadow-sm border-0 focus:outline-none focus:ring-2 focus:ring-slate-200 whitespace-nowrap w-[120px]" style={styleWhen(task.when || "")}>
+                    <CalendarIcon className="h-3 w-3 opacity-70" />
+                    <span>{task.when || "To be defined"}</span>
+                  </SelectTrigger>
+                  <SelectContent className="rounded-xl border border-slate-200 min-w-[180px]">
+                    <SelectItem value="__clear">
+                      <span className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full" style={styleWhen("")}>
+                        <CalendarIcon className="h-3 w-3 opacity-70" />
+                        To be defined
+                      </span>
+                    </SelectItem>
+                    {WHEN_OPTIONS.filter(x=>x!=="").map((opt)=>(
+                      <SelectItem key={opt} value={opt}>
+                        <span className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full" style={styleWhen(opt)}>
+                          <CalendarIcon className="h-3 w-3 opacity-70" />{opt}
+                        </span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </Draggable>
