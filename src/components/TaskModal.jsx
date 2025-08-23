@@ -4,7 +4,6 @@ import { Select, SelectTrigger, SelectContent, SelectItem } from './ui/Select'
 import DateRangePicker from './ui/DateRangePicker'
 import { 
   PRIORITIES, 
-  COMPARTMENTS, 
   STATUSES, 
   SIZES,
   PRIORITY_STYLES,
@@ -24,7 +23,8 @@ const TaskModal = ({
   tasks = {}, 
   editingId, 
   initialColumn, 
-  groupBy, 
+  groupBy,
+  compartments = [],
   prefillTitle = "", 
   fromQuickId = null,
   loading = false
@@ -38,7 +38,7 @@ const TaskModal = ({
   )
   const [compartment, setCompartment] = useState(
     editing?.compartment || 
-    (fromQuickId ? "" : (groupBy === "compartment" && COMPARTMENTS.includes(initialColumn) ? initialColumn : COMPARTMENTS[0]))
+    (fromQuickId ? "" : (groupBy === "compartment" && compartments.includes(initialColumn) ? initialColumn : compartments[0] || ""))
   )
   const [status, setStatus] = useState(
     editing?.status || 
@@ -220,7 +220,7 @@ const TaskModal = ({
                   disabled={loading}
                 >
                   {fromQuickId && (<option value="">— choisir —</option>)}
-                  {COMPARTMENTS.map((c) => <option key={c} value={c}>{c}</option>)}
+                  {compartments.map((c) => <option key={c} value={c}>{c}</option>)}
                 </select>
               </div>
             </div>

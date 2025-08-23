@@ -26,7 +26,21 @@ export const WHEN_MAPPING = {
   "This Month": "This Month"
 }
 
-export const COMPARTMENTS = ["PM", "CPO", "FER", "NOVAE", "MRH", "CDA"]
+// Default compartments - can be overridden by user settings
+export const DEFAULT_COMPARTMENTS = ["PM", "CPO", "FER", "NOVAE", "MRH", "CDA"]
+
+// Function to get current compartments (from localStorage or default)
+export const getCompartments = () => {
+  try {
+    const saved = localStorage.getItem('kanban-compartments')
+    return saved ? JSON.parse(saved) : DEFAULT_COMPARTMENTS
+  } catch (e) {
+    return DEFAULT_COMPARTMENTS
+  }
+}
+
+// Legacy export for backward compatibility
+export const COMPARTMENTS = getCompartments()
 export const PRIORITIES = ["P1", "P2", "P3", "P4", "P5"]
 export const STATUSES = ["To Do", "To Analyze", "In Progress", "Done"]
 export const SIZES = ["S", "M", "L", "XL", "XXL"]

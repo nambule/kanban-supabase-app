@@ -20,7 +20,7 @@ import AuthModal from './components/AuthModal'
 import AccountMenu from './components/AccountMenu'
 
 import {
-  COMPARTMENTS,
+  getCompartments,
   PRIORITIES,
   STATUSES,
   PRIORITY_STYLES,
@@ -43,6 +43,7 @@ function App() {
     const saved = localStorage.getItem('kanban-dark-mode')
     return saved ? JSON.parse(saved) : false
   })
+  const [compartments, setCompartments] = useState(getCompartments())
   const [search, setSearch] = useState("")
   const [priorityFilter, setPriorityFilter] = useState({ 
     P1: true, P2: true, P3: true, P4: true, P5: true 
@@ -66,6 +67,19 @@ function App() {
       document.documentElement.classList.remove('dark')
     }
   }, [darkMode])
+
+  // Listen for compartment updates from settings
+  useEffect(() => {
+    const handleCompartmentUpdate = (event) => {
+      setCompartments(event.detail.compartments)
+    }
+
+    window.addEventListener('compartmentsUpdated', handleCompartmentUpdate)
+    
+    return () => {
+      window.removeEventListener('compartmentsUpdated', handleCompartmentUpdate)
+    }
+  }, [])
 
   // Hook d'authentification
   const { 
@@ -142,7 +156,7 @@ function App() {
   }, [])
 
   // Colonnes selon le groupement
-  const columns = groupBy === "compartment" ? COMPARTMENTS 
+  const columns = groupBy === "compartment" ? compartments 
     : groupBy === "priority" ? PRIORITIES 
     : STATUSES
 
@@ -569,6 +583,7 @@ Quick Task
           editingId={modal.editingId}
           initialColumn={modal.initialColumn}
           groupBy={groupBy}
+          compartments={compartments}
           prefillTitle={modal.prefillTitle}
           fromQuickId={modal.fromQuickId}
           loading={false}

@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react'
-import { User, LogOut, ChevronDown } from 'lucide-react'
+import { User, LogOut, ChevronDown, Settings } from 'lucide-react'
 import AccountModal from './AccountModal'
+import SettingsModal from './SettingsModal'
 
 /**
  * Menu compte utilisateur avec dropdown style Gmail
@@ -8,6 +9,7 @@ import AccountModal from './AccountModal'
 const AccountMenu = ({ user, onSignOut }) => {
   const [isOpen, setIsOpen] = useState(false)
   const [showAccountModal, setShowAccountModal] = useState(false)
+  const [showSettingsModal, setShowSettingsModal] = useState(false)
   const menuRef = useRef(null)
 
   // Fermer le menu au clic extérieur
@@ -119,6 +121,18 @@ const AccountMenu = ({ user, onSignOut }) => {
 My Account
               </button>
 
+              {/* Option Settings */}
+              <button
+                className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-3"
+                onClick={() => {
+                  setIsOpen(false)
+                  setShowSettingsModal(true)
+                }}
+              >
+                <Settings className="w-4 h-4 text-slate-500" />
+Settings
+              </button>
+
               {/* Divider */}
               <div className="border-t border-slate-100 my-1" />
 
@@ -140,6 +154,13 @@ Sign Out
         <AccountModal
           onClose={() => setShowAccountModal(false)}
           user={user}
+        />
+      )}
+
+      {/* Modale des paramètres */}
+      {showSettingsModal && (
+        <SettingsModal
+          onClose={() => setShowSettingsModal(false)}
         />
       )}
     </div>

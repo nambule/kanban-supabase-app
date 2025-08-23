@@ -538,7 +538,7 @@ function TaskCard({ id, index, task, onEdit, onRemove, onToggleSubtask, onUpdate
 
           {/* Status and Size badges - Hidden in compact mode */}
           {viewMode !== "compact" && (
-            <div className="flex items-center gap-3 text-xs text-slate-600 flex-wrap">
+            <div className="flex items-center justify-between text-xs text-slate-600 dark:text-slate-400">
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-xs" style={badgeStyle(STATUS_COLORS[task.status])}>{task.status}</span>
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-xs" style={badgeStyle(SIZE_COLORS[task.size])}>{task.size}</span>
             </div>
