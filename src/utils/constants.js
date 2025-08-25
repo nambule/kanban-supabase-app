@@ -29,8 +29,10 @@ export const WHEN_MAPPING = {
 // Default compartments - can be overridden by user settings
 export const DEFAULT_COMPARTMENTS = ["PM", "CPO", "FER", "NOVAE", "MRH", "CDA"]
 
-// Function to get current compartments (from localStorage or default)
+// Function to get current compartments (from localStorage or default) - DEPRECATED
+// Use useCompartments hook instead
 export const getCompartments = () => {
+  console.warn('getCompartments is deprecated. Use useCompartments hook instead.')
   try {
     const saved = localStorage.getItem('kanban-compartments')
     return saved ? JSON.parse(saved) : DEFAULT_COMPARTMENTS
@@ -39,8 +41,8 @@ export const getCompartments = () => {
   }
 }
 
-// Legacy export for backward compatibility
-export const COMPARTMENTS = getCompartments()
+// Legacy export for backward compatibility - DEPRECATED
+export const COMPARTMENTS = DEFAULT_COMPARTMENTS
 export const PRIORITIES = ["P1", "P2", "P3", "P4", "P5"]
 export const STATUSES = ["To Do", "To Analyze", "In Progress", "Done"]
 export const SIZES = ["S", "M", "L", "XL", "XXL"]

@@ -1,92 +1,110 @@
 import React, { useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { X, Plus, Trash2, GripVertical, Edit } from 'lucide-react'
+import { useCompartments } from '../hooks/useCompartments'
 
 /**
  * Modal for managing application settings (compartments management)
  */
 const SettingsModal = ({ onClose }) => {
-  const [compartments, setCompartments] = useState([])
+  // Handle close with potential reload
+  const handleClose = () => {
+    if (hasChanges) {
+      console.log('🔄 Compartments changed, reloading page...')
+      window.location.reload()
+    } else {
+      onClose()
+    }
+  }
+  const {
+    compartments,
+    loading,
+    error,
+    createCompartment,
+    updateCompartment,
+    deleteCompartment,
+    reorderCompartments
+  } = useCompartments()
+
   const [newCompartment, setNewCompartment] = useState('')
   const [editingId, setEditingId] = useState(null)
   const [editingValue, setEditingValue] = useState('')
   const [draggedItem, setDraggedItem] = useState(null)
-
-  // Load compartments from constants or localStorage
-  useEffect(() => {
-    // Get compartments from localStorage or use default
-    const saved = localStorage.getItem('kanban-compartments')
-    if (saved) {
-      try {
-        setCompartments(JSON.parse(saved))
-      } catch (e) {
-        // If parsing fails, use default compartments
-        setCompartments(["PM", "CPO", "FER", "NOVAE", "MRH", "CDA"])
-      }
-    } else {
-      setCompartments(["PM", "CPO", "FER", "NOVAE", "MRH", "CDA"])
-    }
-  }, [])
-
-  // Save compartments to localStorage
-  const saveCompartments = (newCompartments) => {
-    localStorage.setItem('kanban-compartments', JSON.stringify(newCompartments))
-    setCompartments(newCompartments)
-    // Trigger a custom event to notify other components
-    window.dispatchEvent(new CustomEvent('compartmentsUpdated', { 
-      detail: { compartments: newCompartments } 
-    }))
-  }
+  const [dragOverItem, setDragOverItem] = useState(null)
+  const [actionLoading, setActionLoading] = useState(false)
+  const [hasChanges, setHasChanges] = useState(false)
 
   // Add new compartment
-  const handleAddCompartment = () => {
+  const handleAddCompartment = async () => {
     if (!newCompartment.trim()) return
-    if (compartments.includes(newCompartment.trim())) {
+    if (compartments.some(comp => comp.name === newCompartment.trim())) {
       alert('This compartment already exists')
       return
     }
     
-    const newCompartments = [...compartments, newCompartment.trim()]
-    saveCompartments(newCompartments)
-    setNewCompartment('')
+    setActionLoading(true)
+    try {
+      await createCompartment(newCompartment.trim())
+      setNewCompartment('')
+      setHasChanges(true)
+    } catch (err) {
+      alert(`Error creating compartment: ${err.message}`)
+    } finally {
+      setActionLoading(false)
+    }
   }
 
   // Delete compartment
-  const handleDeleteCompartment = (compartmentToDelete) => {
+  const handleDeleteCompartment = async (compartmentToDelete) => {
     if (compartments.length <= 1) {
       alert('You must have at least one compartment')
       return
     }
     
-    if (confirm(`Are you sure you want to delete "${compartmentToDelete}"?\nAll tasks in this compartment will need to be reassigned.`)) {
-      const newCompartments = compartments.filter(c => c !== compartmentToDelete)
-      saveCompartments(newCompartments)
+    if (confirm(`Are you sure you want to delete "${compartmentToDelete.name}"?\nAll tasks in this compartment will need to be reassigned.`)) {
+      setActionLoading(true)
+      try {
+        await deleteCompartment(compartmentToDelete.id)
+        setHasChanges(true)
+      } catch (err) {
+        alert(`Error deleting compartment: ${err.message}`)
+      } finally {
+        setActionLoading(false)
+      }
     }
   }
 
   // Start editing
   const handleStartEdit = (compartment) => {
-    setEditingId(compartment)
-    setEditingValue(compartment)
+    setEditingId(compartment.id)
+    setEditingValue(compartment.name)
   }
 
   // Save edit
-  const handleSaveEdit = () => {
+  const handleSaveEdit = async () => {
     if (!editingValue.trim()) {
       setEditingId(null)
       return
     }
     
-    if (editingValue.trim() !== editingId && compartments.includes(editingValue.trim())) {
+    const currentCompartment = compartments.find(c => c.id === editingId)
+    if (editingValue.trim() !== currentCompartment.name && 
+        compartments.some(c => c.name === editingValue.trim())) {
       alert('This compartment already exists')
       return
     }
     
-    const newCompartments = compartments.map(c => 
-      c === editingId ? editingValue.trim() : c
-    )
-    saveCompartments(newCompartments)
-    setEditingId(null)
-    setEditingValue('')
+    setActionLoading(true)
+    try {
+      await updateCompartment(editingId, { name: editingValue.trim() })
+      setEditingId(null)
+      setEditingValue('')
+      setHasChanges(true)
+    } catch (err) {
+      alert(`Error updating compartment: ${err.message}`)
+    } finally {
+      setActionLoading(false)
+    }
   }
 
   // Cancel edit
@@ -115,6 +133,20 @@ const SettingsModal = ({ onClose }) => {
   const handleDragStart = (e, compartment) => {
     setDraggedItem(compartment)
     e.dataTransfer.effectAllowed = 'move'
+    
+    // Create custom drag image with better styling
+    const dragElement = e.currentTarget.cloneNode(true)
+    dragElement.style.opacity = '0.8'
+    dragElement.style.transform = 'rotate(2deg)'
+    dragElement.style.boxShadow = '0 10px 25px rgba(0, 0, 0, 0.3)'
+    document.body.appendChild(dragElement)
+    e.dataTransfer.setDragImage(dragElement, e.offsetX, e.offsetY)
+    setTimeout(() => document.body.removeChild(dragElement), 0)
+  }
+
+  const handleDragEnd = () => {
+    setDraggedItem(null)
+    setDragOverItem(null)
   }
 
   const handleDragOver = (e) => {
@@ -122,33 +154,71 @@ const SettingsModal = ({ onClose }) => {
     e.dataTransfer.dropEffect = 'move'
   }
 
-  const handleDrop = (e, targetCompartment) => {
+  const handleDragEnter = (e, compartment) => {
     e.preventDefault()
+    if (draggedItem && draggedItem.id !== compartment.id) {
+      setDragOverItem(compartment.id)
+    }
+  }
+
+  const handleDragLeave = (e) => {
+    // Only clear drag over if we're leaving the container, not just moving between child elements
+    if (!e.currentTarget.contains(e.relatedTarget)) {
+      setDragOverItem(null)
+    }
+  }
+
+  const handleDrop = async (e, targetCompartment) => {
+    e.preventDefault()
+    setDragOverItem(null)
     
-    if (!draggedItem || draggedItem === targetCompartment) {
+    if (!draggedItem || draggedItem.id === targetCompartment.id) {
       setDraggedItem(null)
       return
     }
 
-    const draggedIndex = compartments.indexOf(draggedItem)
-    const targetIndex = compartments.indexOf(targetCompartment)
+    const draggedIndex = compartments.findIndex(c => c.id === draggedItem.id)
+    const targetIndex = compartments.findIndex(c => c.id === targetCompartment.id)
     
+    if (draggedIndex === -1 || targetIndex === -1) {
+      setDraggedItem(null)
+      return
+    }
+
+    // Create new array with reordered items
     const newCompartments = [...compartments]
-    newCompartments.splice(draggedIndex, 1)
-    newCompartments.splice(targetIndex, 0, draggedItem)
+    const [movedItem] = newCompartments.splice(draggedIndex, 1)
+    newCompartments.splice(targetIndex, 0, movedItem)
     
-    saveCompartments(newCompartments)
-    setDraggedItem(null)
+    setActionLoading(true)
+    try {
+      await reorderCompartments(newCompartments)
+      setHasChanges(true)
+    } catch (err) {
+      alert(`Error reordering compartments: ${err.message}`)
+    } finally {
+      setActionLoading(false)
+      setDraggedItem(null)
+    }
   }
 
-  return (
-    <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-      <div className="w-full max-w-md bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700">
+  const modalContent = (
+    <div 
+      className="fixed inset-0 bg-black/50 flex items-start justify-center pt-16 p-4 overflow-y-auto"
+      style={{ zIndex: 99999 }}
+      onMouseDown={(e) => { if (e.target === e.currentTarget) handleClose() }}
+      onKeyDown={(e) => { if (e.key === 'Escape') handleClose() }}
+      tabIndex={-1}
+    >
+      <div 
+        className="w-full max-w-md bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 max-h-[80vh] flex flex-col overflow-hidden mb-16"
+        style={{ zIndex: 100000 }}
+      >
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-slate-200 dark:border-slate-700">
           <h2 className="text-xl font-semibold text-slate-900 dark:text-white">Settings</h2>
           <button
-            onClick={onClose}
+            onClick={handleClose}
             className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
           >
             <X className="h-5 w-5" />
@@ -156,7 +226,7 @@ const SettingsModal = ({ onClose }) => {
         </div>
 
         {/* Content */}
-        <div className="p-6">
+        <div className="p-6 overflow-y-auto flex-1">
           <div className="space-y-6">
             {/* Compartments Management */}
             <div>
@@ -172,11 +242,12 @@ const SettingsModal = ({ onClose }) => {
                   onChange={(e) => setNewCompartment(e.target.value)}
                   onKeyDown={handleNewCompartmentKeyDown}
                   placeholder="Add new compartment..."
-                  className="flex-1 px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  disabled={actionLoading}
+                  className="flex-1 px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
                 />
                 <button
                   onClick={handleAddCompartment}
-                  disabled={!newCompartment.trim()}
+                  disabled={!newCompartment.trim() || actionLoading}
                   className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 dark:disabled:bg-slate-600 text-white rounded-lg transition-colors flex items-center gap-2"
                 >
                   <Plus className="h-4 w-4" />
@@ -184,25 +255,66 @@ const SettingsModal = ({ onClose }) => {
                 </button>
               </div>
 
+              {/* Loading state */}
+              {loading && (
+                <div className="flex items-center justify-center py-8">
+                  <div className="text-slate-600 dark:text-slate-400">Loading compartments...</div>
+                </div>
+              )}
+
+              {/* Error state */}
+              {error && (
+                <div className="p-3 mb-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-700 dark:text-red-300 text-sm">
+                  Error: {error}
+                </div>
+              )}
+
               {/* Existing compartments list */}
-              <div className="space-y-2 max-h-64 overflow-y-auto">
-                {compartments.map((compartment, index) => (
-                  <div
-                    key={compartment}
-                    draggable
-                    onDragStart={(e) => handleDragStart(e, compartment)}
-                    onDragOver={handleDragOver}
-                    onDrop={(e) => handleDrop(e, compartment)}
-                    className={`flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-700 rounded-lg border border-slate-200 dark:border-slate-600 ${
-                      draggedItem === compartment ? 'opacity-50' : ''
-                    } hover:bg-slate-100 dark:hover:bg-slate-600 transition-colors cursor-move`}
-                  >
-                    {/* Drag handle */}
-                    <GripVertical className="h-4 w-4 text-slate-400 dark:text-slate-500" />
+              {!loading && (
+                <div className="max-h-64 overflow-y-auto">
+                  {compartments.map((compartment, index) => {
+                    const isDragging = draggedItem?.id === compartment.id
+                    const isDragOver = dragOverItem === compartment.id
                     
-                    {/* Compartment name (editable) */}
-                    <div className="flex-1">
-                      {editingId === compartment ? (
+                    return (
+                      <div key={compartment.id} className="relative">
+                        {/* Drop indicator above */}
+                        {isDragOver && draggedItem && (
+                          <div className="absolute -top-1 left-0 right-0 h-0.5 bg-blue-500 rounded-full z-10 shadow-sm">
+                            <div className="absolute -left-1 -top-1 w-2 h-2 bg-blue-500 rounded-full"></div>
+                            <div className="absolute -right-1 -top-1 w-2 h-2 bg-blue-500 rounded-full"></div>
+                          </div>
+                        )}
+                        
+                        <div
+                          draggable={!actionLoading}
+                          onDragStart={(e) => handleDragStart(e, compartment)}
+                          onDragEnd={handleDragEnd}
+                          onDragOver={handleDragOver}
+                          onDragEnter={(e) => handleDragEnter(e, compartment)}
+                          onDragLeave={handleDragLeave}
+                          onDrop={(e) => handleDrop(e, compartment)}
+                          className={`
+                            flex items-center gap-3 p-3 rounded-lg border transition-all duration-200 mb-2
+                            ${isDragging ? 
+                              'opacity-30 scale-95 rotate-1 cursor-grabbing bg-slate-100 dark:bg-slate-600' : 
+                              'cursor-grab hover:shadow-md active:cursor-grabbing'
+                            }
+                            ${isDragOver ? 
+                              'bg-blue-50 dark:bg-blue-900/30 border-blue-300 dark:border-blue-700 shadow-lg ring-2 ring-blue-200 dark:ring-blue-800' :
+                              'bg-slate-50 dark:bg-slate-700 border-slate-200 dark:border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-600'
+                            }
+                            ${actionLoading ? 'pointer-events-none opacity-50' : ''}
+                          `}
+                        >
+                      {/* Drag handle */}
+                      <GripVertical className={`h-4 w-4 transition-colors ${
+                        isDragging ? 'text-blue-500' : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300'
+                      }`} />
+                      
+                      {/* Compartment name (editable) */}
+                      <div className="flex-1">
+                        {editingId === compartment.id ? (
                         <input
                           type="text"
                           value={editingValue}
@@ -214,14 +326,14 @@ const SettingsModal = ({ onClose }) => {
                         />
                       ) : (
                         <span className="text-sm font-medium text-slate-900 dark:text-white">
-                          {compartment}
+                          {compartment.name}
                         </span>
                       )}
                     </div>
 
                     {/* Actions */}
                     <div className="flex items-center gap-1">
-                      {editingId === compartment ? (
+                      {editingId === compartment.id ? (
                         <>
                           <button
                             onClick={handleSaveEdit}
@@ -257,24 +369,29 @@ const SettingsModal = ({ onClose }) => {
                         </>
                       )}
                     </div>
-                  </div>
-                ))}
-              </div>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
 
               {/* Instructions */}
-              <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-                <p className="text-xs text-blue-700 dark:text-blue-300">
-                  💡 <strong>Tips:</strong> Drag compartments to reorder them. Changes are saved automatically.
-                </p>
-              </div>
+              {!loading && (
+                <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                  <p className="text-xs text-blue-700 dark:text-blue-300">
+                    💡 <strong>Tips:</strong> Drag compartments by the grip icon to reorder them. You'll see a blue line indicating where they'll be dropped. Changes are saved automatically.
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         </div>
 
         {/* Footer */}
-        <div className="flex justify-end p-6 border-t border-slate-200 dark:border-slate-700">
+        <div className="flex justify-end p-6 border-t border-slate-200 dark:border-slate-700 flex-shrink-0">
           <button
-            onClick={onClose}
+            onClick={handleClose}
             className="px-4 py-2 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 rounded-lg transition-colors"
           >
             Done
@@ -283,6 +400,8 @@ const SettingsModal = ({ onClose }) => {
       </div>
     </div>
   )
+
+  return createPortal(modalContent, document.body)
 }
 
 export default SettingsModal

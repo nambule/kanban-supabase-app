@@ -13,12 +13,22 @@ export const taskService = {
   // --- Gestion des tâches principales ---
   
   /**
-   * Récupère toutes les tâches
+   * Récupère toutes les tâches de l'utilisateur connecté avec les informations de compartiment
    */
   async getAllTasks() {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) throw new Error('User not authenticated')
+
     const { data, error } = await supabase
       .from('tasks')
-      .select('*')
+      .select(`
+        *,
+        compartments!fk_tasks_compartment (
+          id,
+          name
+        )
+      `)
+      .eq('user_id', user.id)
       .order('created_at', { ascending: true })
     
     if (error) throw error
@@ -37,7 +47,7 @@ export const taskService = {
       .insert([{
         title: task.title,
         priority: task.priority || 'P3',
-        compartment: task.compartment,
+        compartment_id: task.compartmentId,
         status: task.status || 'To Do',
         size: task.size || 'M',
         note: task.note || '',
@@ -51,7 +61,13 @@ export const taskService = {
         completion: task.completion || 0,
         user_id: user.id
       }])
-      .select()
+      .select(`
+        *,
+        compartments!fk_tasks_compartment (
+          id,
+          name
+        )
+      `)
       .single()
 
     if (error) throw error
@@ -59,14 +75,17 @@ export const taskService = {
   },
 
   /**
-   * Met à jour une tâche existante
+   * Met à jour une tâche existante de l'utilisateur connecté
    */
   async updateTask(taskId, updates) {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) throw new Error('User not authenticated')
+
     const updateData = {}
     
     if ('title' in updates) updateData.title = updates.title
     if ('priority' in updates) updateData.priority = updates.priority
-    if ('compartment' in updates) updateData.compartment = updates.compartment
+    if ('compartmentId' in updates) updateData.compartment_id = updates.compartmentId
     if ('status' in updates) updateData.status = updates.status
     if ('size' in updates) updateData.size = updates.size
     if ('note' in updates) updateData.note = updates.note
@@ -85,7 +104,14 @@ export const taskService = {
       .from('tasks')
       .update(updateData)
       .eq('id', taskId)
-      .select()
+      .eq('user_id', user.id)
+      .select(`
+        *,
+        compartments!fk_tasks_compartment (
+          id,
+          name
+        )
+      `)
       .single()
 
     if (error) throw error
@@ -93,13 +119,17 @@ export const taskService = {
   },
 
   /**
-   * Supprime une tâche
+   * Supprime une tâche de l'utilisateur connecté
    */
   async deleteTask(taskId) {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) throw new Error('User not authenticated')
+
     const { error } = await supabase
       .from('tasks')
       .delete()
       .eq('id', taskId)
+      .eq('user_id', user.id)
 
     if (error) throw error
   },
@@ -107,12 +137,16 @@ export const taskService = {
   // --- Gestion des tâches rapides ---
   
   /**
-   * Récupère toutes les tâches rapides
+   * Récupère toutes les tâches rapides de l'utilisateur connecté
    */
   async getQuickTasks() {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) throw new Error('User not authenticated')
+
     const { data, error } = await supabase
       .from('quick_tasks')
       .select('*')
+      .eq('user_id', user.id)
       .order('created_at', { ascending: true })
     
     if (error) throw error
@@ -140,13 +174,17 @@ export const taskService = {
   },
 
   /**
-   * Supprime une tâche rapide
+   * Supprime une tâche rapide de l'utilisateur connecté
    */
   async deleteQuickTask(quickTaskId) {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) throw new Error('User not authenticated')
+
     const { error } = await supabase
       .from('quick_tasks')
       .delete()
       .eq('id', quickTaskId)
+      .eq('user_id', user.id)
 
     if (error) throw error
   }

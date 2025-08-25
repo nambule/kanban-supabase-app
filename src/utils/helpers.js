@@ -1,4 +1,4 @@
-import { WHEN_COLORS, STATUS_COLORS, SIZE_COLORS, COMPARTMENT_COLORS, STATUS_MAPPING, WHEN_MAPPING } from './constants'
+import { WHEN_COLORS, STATUS_COLORS, SIZE_COLORS, COMPARTMENT_COLORS, STATUS_MAPPING, WHEN_MAPPING, DEFAULT_COMPARTMENTS } from './constants'
 
 // Fonctions utilitaires pour l'application Kanban
 
@@ -44,7 +44,8 @@ export const transformTaskFromDB = (dbTask) => {
     id: dbTask.id,
     title: dbTask.title,
     priority: dbTask.priority,
-    compartment: dbTask.compartment,
+    compartmentId: dbTask.compartment_id || dbTask.compartments?.id,
+    compartment: dbTask.compartments?.name || dbTask.compartment, // Use joined compartment name or fallback
     status: STATUS_MAPPING[dbTask.status] || dbTask.status, // Normaliser le statut
     size: dbTask.size,
     note: dbTask.note,
@@ -93,7 +94,7 @@ export const createEmptyOrder = (compartments, priorities, statuses) => {
 // Réorganise l'ordre des tâches selon leur groupement
 export const reorganizeTaskOrder = (tasks, groupBy) => {
   const order = createEmptyOrder(
-    ["PM", "CPO", "FER", "NOVAE", "MRH", "CDA"],
+    DEFAULT_COMPARTMENTS,
     ["P1", "P2", "P3", "P4", "P5"],
     ["To Do", "To Analyze", "In Progress", "Done"]
   )

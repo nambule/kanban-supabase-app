@@ -1,14 +1,14 @@
 import { useState, useEffect, useCallback } from 'react'
 import { taskService } from '../services/taskService'
 import { transformTaskFromDB, reorganizeTaskOrder, createEmptyOrder } from '../utils/helpers'
-import { COMPARTMENTS, PRIORITIES, STATUSES } from '../utils/constants'
+import { DEFAULT_COMPARTMENTS, PRIORITIES, STATUSES } from '../utils/constants'
 
 /**
  * Hook personnalisé pour gérer les tâches Kanban avec Supabase
  */
 export const useTasks = () => {
   const [tasks, setTasks] = useState({})
-  const [order, setOrder] = useState(createEmptyOrder(COMPARTMENTS, PRIORITIES, STATUSES))
+  const [order, setOrder] = useState(createEmptyOrder(DEFAULT_COMPARTMENTS, PRIORITIES, STATUSES))
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
@@ -32,7 +32,39 @@ export const useTasks = () => {
       })
       
       setTasks(tasksMap)
-      setOrder(reorganizeTaskOrder(tasksMap, 'compartment'))
+      
+      // Get compartments for the current user and build order structure
+      // Note: We'll get compartments from the compartment hook, but for initial load we use defaults + found compartments
+      const compartmentNames = new Set([...DEFAULT_COMPARTMENTS])
+      
+      // For now, during migration, we might have both compartment names and IDs
+      // Add any compartment names found in tasks
+      Object.values(tasksMap).forEach(task => {
+        if (task.compartment) compartmentNames.add(task.compartment)
+      })
+      
+      const order = createEmptyOrder(
+        Array.from(compartmentNames),
+        PRIORITIES,
+        STATUSES
+      )
+      
+      // Populate the order with tasks
+      // During migration, tasks might have either compartment names or IDs
+      Object.values(tasksMap).forEach(task => {
+        // Handle compartments - use compartment name if available, otherwise skip for now
+        if (task.compartment && order.compartment[task.compartment]) {
+          order.compartment[task.compartment].push(task.id)
+        }
+        if (task.priority && order.priority[task.priority]) {
+          order.priority[task.priority].push(task.id)
+        }
+        if (task.status && order.status[task.status]) {
+          order.status[task.status].push(task.id)
+        }
+      })
+      
+      setOrder(order)
     } catch (err) {
       console.error('❌ Erreur lors du chargement des tâches:', err)
       setError(`Erreur de connexion: ${err.message}`)
@@ -45,6 +77,43 @@ export const useTasks = () => {
   useEffect(() => {
     loadTasks()
   }, [loadTasks])
+
+  // Écouter les changements de compartiments
+  useEffect(() => {
+    const handleCompartmentUpdate = (event) => {
+      console.log('🔄 useTasks received compartmentsUpdated event')
+      console.log('📦 Event detail:', event.detail.compartments.map(c => c.name || c))
+      const compartmentNames = event.detail.compartments.map(c => c.name || c)
+      
+      setOrder(prev => {
+        // Include all compartments from database + any compartments found in existing tasks
+        const allCompartments = new Set([...compartmentNames])
+        Object.values(tasks).forEach(task => {
+          if (task.compartment) allCompartments.add(task.compartment)
+        })
+        
+        const newOrder = createEmptyOrder(Array.from(allCompartments), PRIORITIES, STATUSES)
+        
+        // Populate with existing tasks
+        Object.values(tasks).forEach(task => {
+          if (task.compartment && newOrder.compartment[task.compartment]) {
+            newOrder.compartment[task.compartment].push(task.id)
+          }
+          if (task.priority && newOrder.priority[task.priority]) {
+            newOrder.priority[task.priority].push(task.id)
+          }
+          if (task.status && newOrder.status[task.status]) {
+            newOrder.status[task.status].push(task.id)
+          }
+        })
+        
+        return newOrder
+      })
+    }
+
+    window.addEventListener('compartmentsUpdated', handleCompartmentUpdate)
+    return () => window.removeEventListener('compartmentsUpdated', handleCompartmentUpdate)
+  }, [tasks])
 
   // Créer une nouvelle tâche
   const createTask = useCallback(async (taskData) => {
@@ -80,8 +149,11 @@ export const useTasks = () => {
             newOrder.status[newTask.status] && 
             newOrder.status[newTask.status].includes(newTask.id)
           
-          // Ajouter seulement si pas déjà présent
-          if (newTask.compartment && newOrder.compartment[newTask.compartment] && !taskAlreadyInCompartment) {
+          // Ajouter seulement si pas déjà présent et créer les compartiments manquants
+          if (newTask.compartment && !taskAlreadyInCompartment) {
+            if (!newOrder.compartment[newTask.compartment]) {
+              newOrder.compartment[newTask.compartment] = []
+            }
             newOrder.compartment[newTask.compartment].push(newTask.id)
           }
           if (newTask.priority && newOrder.priority[newTask.priority] && !taskAlreadyInPriority) {
@@ -137,7 +209,10 @@ export const useTasks = () => {
             })
             
             // Réajouter dans les bonnes colonnes à la même position si possible
-            if (updatedTask.compartment && newOrder.compartment[updatedTask.compartment]) {
+            if (updatedTask.compartment) {
+              if (!newOrder.compartment[updatedTask.compartment]) {
+                newOrder.compartment[updatedTask.compartment] = []
+              }
               const pos = positions.compartment
               if (pos && pos.column === updatedTask.compartment) {
                 // Même colonne, remettre à la même position
@@ -211,7 +286,7 @@ export const useTasks = () => {
   }, [])
 
   // Réorganiser les tâches par drag & drop
-  const reorderTasks = useCallback((source, destination, draggableId, groupBy) => {
+  const reorderTasks = useCallback((source, destination, draggableId, groupBy, compartments) => {
     if (!destination) return
     if (source.droppableId === destination.droppableId && source.index === destination.index) return
 
@@ -234,9 +309,17 @@ export const useTasks = () => {
     // Si changement de colonne, mettre à jour la tâche
     if (source.droppableId !== destination.droppableId) {
       const updates = {}
-      if (groupBy === 'compartment') updates.compartment = destination.droppableId
-      else if (groupBy === 'priority') updates.priority = destination.droppableId
-      else updates.status = destination.droppableId
+      if (groupBy === 'compartment') {
+        // Map compartment name to ID
+        const compartment = compartments.find(c => c.name === destination.droppableId)
+        if (compartment) {
+          updates.compartmentId = compartment.id
+        }
+      } else if (groupBy === 'priority') {
+        updates.priority = destination.droppableId
+      } else {
+        updates.status = destination.droppableId
+      }
       
       updateTask(draggableId, updates).catch(err => {
         console.error('Erreur lors de la mise à jour après drag & drop:', err)

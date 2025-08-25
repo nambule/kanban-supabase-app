@@ -20,7 +20,6 @@ import AuthModal from './components/AuthModal'
 import AccountMenu from './components/AccountMenu'
 
 import {
-  getCompartments,
   PRIORITIES,
   STATUSES,
   PRIORITY_STYLES,
@@ -30,6 +29,7 @@ import {
   WHEN_ORDER,
   PRIORITY_RANK
 } from './utils/constants'
+import { useCompartments } from './hooks/useCompartments'
 import { badgeStyle, compStyle } from './utils/helpers'
 
 /**
@@ -43,7 +43,7 @@ function App() {
     const saved = localStorage.getItem('kanban-dark-mode')
     return saved ? JSON.parse(saved) : false
   })
-  const [compartments, setCompartments] = useState(getCompartments())
+  const { compartments: compartmentObjects, compartmentNames } = useCompartments()
   const [search, setSearch] = useState("")
   const [priorityFilter, setPriorityFilter] = useState({ 
     P1: true, P2: true, P3: true, P4: true, P5: true 
@@ -156,7 +156,7 @@ function App() {
   }, [])
 
   // Colonnes selon le groupement
-  const columns = groupBy === "compartment" ? compartments 
+  const columns = groupBy === "compartment" ? compartmentNames 
     : groupBy === "priority" ? PRIORITIES 
     : STATUSES
 
@@ -216,7 +216,7 @@ function App() {
 
   // Gestion du drag & drop
   const onDragEnd = (result) => {
-    reorderTasks(result.source, result.destination, result.draggableId, groupBy)
+    reorderTasks(result.source, result.destination, result.draggableId, groupBy, compartmentObjects)
   }
 
   // Gestion des modales
@@ -240,15 +240,33 @@ function App() {
 
   // Sauvegarde d'une tâche
   const handleSaveTask = async (taskData) => {
-    if (taskData.id) {
-      await updateTask(taskData.id, taskData)
+    // Map compartment name to ID for database operations
+    let processedTaskData = { ...taskData }
+    if (taskData.compartment && !taskData.compartmentId) {
+      console.log(`🔍 Looking for compartment: "${taskData.compartment}"`)
+      console.log('Available compartments:', compartmentObjects?.map(c => ({ id: c.id, name: c.name })))
+      
+      const compartment = compartmentObjects?.find(c => c.name === taskData.compartment)
+      if (compartment) {
+        processedTaskData.compartmentId = compartment.id
+        console.log(`✅ Mapped compartment "${taskData.compartment}" to ID ${compartment.id}`)
+      } else {
+        console.error(`❌ Could not find compartment with name "${taskData.compartment}"`)
+        // Don't proceed without a compartment ID
+        alert(`Error: Could not find compartment "${taskData.compartment}". Please try refreshing the page.`)
+        return
+      }
+    }
+    
+    if (processedTaskData.id) {
+      await updateTask(processedTaskData.id, processedTaskData)
     } else {
-      await createTask(taskData)
+      await createTask(processedTaskData)
     }
     
     // Supprimer la tâche rapide si applicable
-    if (taskData.fromQuickId) {
-      await removeQuickTask(taskData.fromQuickId)
+    if (processedTaskData.fromQuickId) {
+      await removeQuickTask(processedTaskData.fromQuickId)
     }
     
     closeModal()
@@ -583,7 +601,7 @@ Quick Task
           editingId={modal.editingId}
           initialColumn={modal.initialColumn}
           groupBy={groupBy}
-          compartments={compartments}
+          compartments={compartmentNames}
           prefillTitle={modal.prefillTitle}
           fromQuickId={modal.fromQuickId}
           loading={false}
