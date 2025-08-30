@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../services/supabase'
+import { seedUserData } from '../utils/seedUserData'
 
 /**
  * Hook personnalisé pour gérer l'authentification avec Supabase
@@ -34,6 +35,35 @@ export const useAuth = () => {
         
         if (event === 'SIGNED_OUT') {
           setError(null)
+        }
+        
+        // Seed user data after successful signup confirmation
+        if (event === 'SIGNED_IN' && session?.user) {
+          // Check if user has any compartments (indicating they're not new)
+          // Do this asynchronously without blocking the auth state update
+          setTimeout(async () => {
+            try {
+              const { data: compartments } = await supabase
+                .from('compartments')
+                .select('id')
+                .eq('user_id', session.user.id)
+                .limit(1)
+              
+              // If no compartments exist, seed the user with initial data
+              if (!compartments || compartments.length === 0) {
+                console.log('🌱 New user detected, seeding initial data...')
+                await seedUserData(session.user.id)
+                
+                // Emit event to refresh compartments
+                window.dispatchEvent(new CustomEvent('userDataSeeded', { 
+                  detail: { userId: session.user.id } 
+                }))
+              }
+            } catch (err) {
+              console.error('Error checking/seeding user data:', err)
+              // Don't prevent the app from loading even if seeding fails
+            }
+          }, 100)
         }
       }
     )
@@ -89,12 +119,21 @@ export const useAuth = () => {
   const signOut = useCallback(async () => {
     try {
       setError(null)
+      setLoading(true)
+      console.log('🔄 Signing out user...')
+      
       const { error } = await supabase.auth.signOut()
       if (error) throw error
+      
+      // Clear user state immediately
+      setUser(null)
+      console.log('✅ User signed out successfully')
     } catch (err) {
-      console.error('Erreur de déconnexion:', err)
+      console.error('❌ Erreur de déconnexion:', err)
       setError(err.message)
       throw err
+    } finally {
+      setLoading(false)
     }
   }, [])
 

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { taskService } from '../services/taskService'
+import { supabase } from '../services/supabase'
 
 /**
  * Hook personnalisé pour gérer les tâches rapides avec Supabase
@@ -25,9 +26,40 @@ export const useQuickTasks = () => {
     }
   }, [])
 
-  // Charger les tâches rapides au montage
+  // Charger les tâches rapides au montage, mais seulement si authentifié
   useEffect(() => {
-    loadQuickTasks()
+    const checkAuthAndLoadQuickTasks = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (user) {
+          loadQuickTasks()
+        } else {
+          // User not authenticated yet, wait for auth state change
+          setLoading(false)
+        }
+      } catch (err) {
+        console.log('🔄 Auth check failed, will retry when auth state changes:', err.message)
+        setLoading(false)
+      }
+    }
+    
+    checkAuthAndLoadQuickTasks()
+  }, [loadQuickTasks])
+
+  // Listen for auth state changes to load quick tasks when user becomes authenticated
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_IN' && session?.user) {
+        console.log('🔄 User signed in, loading quick tasks...')
+        loadQuickTasks()
+      } else if (event === 'SIGNED_OUT') {
+        console.log('🔄 User signed out, clearing quick tasks...')
+        setQuickTasks([])
+        setLoading(false)
+      }
+    })
+
+    return () => subscription.unsubscribe()
   }, [loadQuickTasks])
 
   // Ajouter une tâche rapide

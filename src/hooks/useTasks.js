@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { taskService } from '../services/taskService'
+import { supabase } from '../services/supabase'
 import { transformTaskFromDB, reorganizeTaskOrder, createEmptyOrder } from '../utils/helpers'
 import { DEFAULT_COMPARTMENTS, PRIORITIES, STATUSES } from '../utils/constants'
 
@@ -21,11 +22,14 @@ export const useTasks = () => {
       console.log('🔄 Tentative de connexion à Supabase...')
       const dbTasks = await taskService.getAllTasks()
       console.log('✅ Connexion réussie, tâches chargées:', dbTasks.length)
+      console.log('📋 Raw tasks from DB:', dbTasks)
       
       const tasksMap = {}
       
       dbTasks.forEach(dbTask => {
+        console.log('📝 Processing task:', dbTask.title, 'Compartment data:', dbTask.compartments)
         const task = transformTaskFromDB(dbTask)
+        console.log('🔄 Transformed task:', task)
         if (task) {
           tasksMap[task.id] = task
         }
@@ -34,15 +38,33 @@ export const useTasks = () => {
       setTasks(tasksMap)
       
       // Get compartments for the current user and build order structure
-      // Note: We'll get compartments from the compartment hook, but for initial load we use defaults + found compartments
-      const compartmentNames = new Set([...DEFAULT_COMPARTMENTS])
+      // Load actual user compartments from database instead of using defaults
+      let userCompartmentNames = []
+      try {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) throw new Error('User not authenticated')
+        
+        const { data: userCompartments, error } = await supabase
+          .from('compartments')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('position', { ascending: true })
+        if (error) throw error
+        userCompartmentNames = userCompartments?.map(c => c.name) || []
+        console.log('📦 User compartments from DB:', userCompartmentNames)
+      } catch (err) {
+        console.warn('Could not load user compartments, falling back to task-based discovery:', err)
+        userCompartmentNames = [...DEFAULT_COMPARTMENTS]
+      }
       
-      // For now, during migration, we might have both compartment names and IDs
-      // Add any compartment names found in tasks
+      const compartmentNames = new Set([...userCompartmentNames])
+      
+      // Add any compartment names found in tasks (for safety)
       Object.values(tasksMap).forEach(task => {
         if (task.compartment) compartmentNames.add(task.compartment)
       })
       
+      console.log('📋 Final compartment names for order:', Array.from(compartmentNames))
       const order = createEmptyOrder(
         Array.from(compartmentNames),
         PRIORITIES,
@@ -51,10 +73,15 @@ export const useTasks = () => {
       
       // Populate the order with tasks
       // During migration, tasks might have either compartment names or IDs
+      console.log('📦 Order compartments available:', Object.keys(order.compartment))
       Object.values(tasksMap).forEach(task => {
+        console.log(`🔍 Assigning task "${task.title}" with compartment "${task.compartment}" to order`)
         // Handle compartments - use compartment name if available, otherwise skip for now
         if (task.compartment && order.compartment[task.compartment]) {
+          console.log(`✅ Task "${task.title}" assigned to compartment "${task.compartment}"`)
           order.compartment[task.compartment].push(task.id)
+        } else {
+          console.log(`❌ Task "${task.title}" compartment "${task.compartment}" not found in order compartments`)
         }
         if (task.priority && order.priority[task.priority]) {
           order.priority[task.priority].push(task.id)
@@ -63,6 +90,8 @@ export const useTasks = () => {
           order.status[task.status].push(task.id)
         }
       })
+      
+      console.log('📊 Final order structure:', order)
       
       setOrder(order)
     } catch (err) {
@@ -73,9 +102,55 @@ export const useTasks = () => {
     }
   }, [])
 
-  // Charger les tâches au montage
+  // Charger les tâches au montage, mais seulement si authentifié
   useEffect(() => {
-    loadTasks()
+    const checkAuthAndLoadTasks = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (user) {
+          loadTasks()
+        } else {
+          // User not authenticated yet, wait for auth state change
+          setLoading(false)
+        }
+      } catch (err) {
+        console.log('🔄 Auth check failed, will retry when auth state changes:', err.message)
+        setLoading(false)
+      }
+    }
+    
+    checkAuthAndLoadTasks()
+  }, [loadTasks])
+
+  // Listen for auth state changes to load tasks when user becomes authenticated
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_IN' && session?.user) {
+        console.log('🔄 User signed in, loading tasks...')
+        loadTasks()
+      } else if (event === 'SIGNED_OUT') {
+        console.log('🔄 User signed out, clearing tasks...')
+        setTasks({})
+        setOrder(createEmptyOrder(DEFAULT_COMPARTMENTS, PRIORITIES, STATUSES))
+        setLoading(false)
+      }
+    })
+
+    return () => subscription.unsubscribe()
+  }, [loadTasks])
+
+  // Listen for user data seeding events to refresh tasks
+  useEffect(() => {
+    const handleUserDataSeeded = () => {
+      console.log('🔄 User data seeded event received, refreshing tasks...')
+      loadTasks()
+    }
+
+    window.addEventListener('userDataSeeded', handleUserDataSeeded)
+    
+    return () => {
+      window.removeEventListener('userDataSeeded', handleUserDataSeeded)
+    }
   }, [loadTasks])
 
   // Écouter les changements de compartiments

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { compartmentService } from '../services/compartmentService'
+import { supabase } from '../services/supabase'
 
 /**
  * Hook pour gérer les compartiments utilisateur
@@ -36,9 +37,54 @@ export const useCompartments = () => {
     }
   }, [])
 
-  // Charger les compartiments au montage
+  // Charger les compartiments au montage, mais seulement si authentifié
   useEffect(() => {
-    loadCompartments()
+    const checkAuthAndLoadCompartments = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (user) {
+          loadCompartments()
+        } else {
+          // User not authenticated yet, wait for auth state change
+          setLoading(false)
+        }
+      } catch (err) {
+        console.log('🔄 Auth check failed, will retry when auth state changes:', err.message)
+        setLoading(false)
+      }
+    }
+    
+    checkAuthAndLoadCompartments()
+  }, [loadCompartments])
+
+  // Listen for auth state changes to load compartments when user becomes authenticated
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_IN' && session?.user) {
+        console.log('🔄 User signed in, loading compartments...')
+        loadCompartments()
+      } else if (event === 'SIGNED_OUT') {
+        console.log('🔄 User signed out, clearing compartments...')
+        setCompartments([])
+        setLoading(false)
+      }
+    })
+
+    return () => subscription.unsubscribe()
+  }, [loadCompartments])
+
+  // Listen for user data seeding events to refresh compartments
+  useEffect(() => {
+    const handleUserDataSeeded = () => {
+      console.log('🔄 User data seeded event received, refreshing compartments...')
+      loadCompartments()
+    }
+
+    window.addEventListener('userDataSeeded', handleUserDataSeeded)
+    
+    return () => {
+      window.removeEventListener('userDataSeeded', handleUserDataSeeded)
+    }
   }, [loadCompartments])
 
   // Créer un nouveau compartiment
