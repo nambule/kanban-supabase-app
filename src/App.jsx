@@ -57,6 +57,7 @@ function App() {
   })
   const [quickOpen, setQuickOpen] = useState(false)
   const [authOpen, setAuthOpen] = useState(false)
+  const [authMode, setAuthMode] = useState('signin')
 
   // Gestion du mode sombre
   useEffect(() => {
@@ -316,7 +317,7 @@ function App() {
               {/* Left side - Image and features */}
               <div className="order-2 lg:order-1">
                 <div className="relative">
-                  {/* Kanban Board Illustration */}
+                  {/* Task Board Illustration */}
                   <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl p-6 border border-slate-200 dark:border-slate-700">
                     <div className="grid grid-cols-3 gap-4">
                       {/* Design Column */}
@@ -369,27 +370,24 @@ function App() {
                 
                 {/* Features list */}
                 <div className="mt-8 space-y-4">
-                  <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-200">Why choose our Kanban Board?</h3>
-                  <div className="grid gap-3">
+                  <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-200">Start simple, grow complex</h3>
+                  
+                  <div className="grid gap-2">
                     <div className="flex items-center gap-3 text-slate-600 dark:text-slate-400">
                       <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                      <span>Drag & drop task management</span>
+                      <span>Drag & drop simplicity</span>
                     </div>
                     <div className="flex items-center gap-3 text-slate-600 dark:text-slate-400">
                       <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
-                      <span>Customizable compartments & colors</span>
+                      <span>Customize everything</span>
                     </div>
                     <div className="flex items-center gap-3 text-slate-600 dark:text-slate-400">
                       <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-                      <span>Multiple view modes & filtering</span>
-                    </div>
-                    <div className="flex items-center gap-3 text-slate-600 dark:text-slate-400">
-                      <div className="w-2 h-2 bg-amber-500 rounded-full"></div>
-                      <span>Dark mode & responsive design</span>
+                      <span>Power features when you need them</span>
                     </div>
                     <div className="flex items-center gap-3 text-slate-600 dark:text-slate-400">
                       <div className="w-2 h-2 bg-rose-500 rounded-full"></div>
-                      <span>Flexible & adaptable to your unique workflow</span>
+                      <span>Your workflow, your way</span>
                     </div>
                   </div>
                 </div>
@@ -399,23 +397,39 @@ function App() {
               <div className="order-1 lg:order-2 text-center lg:text-left space-y-8">
                 <div>
                   <div className="flex items-center justify-center lg:justify-start gap-2 mb-4">
-                    <h1 className="text-4xl lg:text-5xl font-bold text-slate-900 dark:text-white">My Kanban Board</h1>
+                    <h1 className="text-4xl lg:text-5xl font-bold text-slate-900 dark:text-white">My Task Board</h1>
                     <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-700">
                       FREE
                     </span>
                   </div>
                   <p className="text-xl text-slate-600 dark:text-slate-400 mb-2">Organize your tasks efficiently</p>
+                  <p className="text-lg text-slate-600 dark:text-slate-400 mb-3">As simple or as powerful as you need it to be</p>
                   <p className="text-sm text-slate-500 dark:text-slate-500">✨ Completely free to use • No limits • No ads</p>
                 </div>
                 
-                <div className="space-y-4">
-                  <button 
-                    onClick={() => setAuthOpen(true)}
-                    className="w-full lg:w-auto px-8 py-4 rounded-xl bg-slate-900 dark:bg-slate-700 text-white hover:bg-slate-800 dark:hover:bg-slate-600 font-semibold text-lg transition-all duration-200 transform hover:scale-105 shadow-lg"
-                  >
-                    Get Started for Free
-                  </button>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">No credit card required • Sign up in seconds</p>
+                <div className="space-y-6">
+                  {/* Primary CTA Buttons */}
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <button 
+                      onClick={() => {
+                        setAuthMode('signup')
+                        setAuthOpen(true)
+                      }}
+                      className="flex-1 px-6 py-3 rounded-xl bg-slate-900 dark:bg-slate-700 text-white hover:bg-slate-800 dark:hover:bg-slate-600 font-semibold text-base transition-all duration-200 transform hover:scale-105 shadow-lg"
+                    >
+                      Sign Up Free
+                    </button>
+                    <button 
+                      onClick={() => {
+                        setAuthMode('signin')
+                        setAuthOpen(true)
+                      }}
+                      className="flex-1 px-6 py-3 rounded-xl border-2 border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:border-slate-400 dark:hover:border-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 font-semibold text-base transition-all duration-200"
+                    >
+                      Sign In
+                    </button>
+                  </div>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 text-center">No credit card required • Get started in seconds</p>
                 </div>
               </div>
             </div>
@@ -428,6 +442,7 @@ function App() {
             onSignUp={signUp}
             loading={authLoading}
             error={authError}
+            defaultMode={authMode}
           />
         )}
       </div>

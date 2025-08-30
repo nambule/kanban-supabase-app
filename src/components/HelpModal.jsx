@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom'
 import { X, Plus } from 'lucide-react'
 
 /**
- * Modale d'aide affichant le guide d'utilisation du Kanban Board
+ * Modale d'aide affichant le guide d'utilisation du Task Board
  */
 const HelpModal = ({ onClose, onCreateTask }) => {
   const modalContent = (
@@ -21,7 +21,7 @@ const HelpModal = ({ onClose, onCreateTask }) => {
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-slate-200 dark:border-slate-700">
           <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
-            How to Use Your Kanban Board 🎯
+            How to Use Your Task Board 🎯
           </h2>
           <button
             onClick={onClose}

@@ -4,8 +4,8 @@ import { X, Mail, Lock, User, Eye, EyeOff } from 'lucide-react'
 /**
  * Modale d'authentification avec Login et Signup
  */
-const AuthModal = ({ onClose, onSignIn, onSignUp, loading = false, error }) => {
-  const [mode, setMode] = useState('signin') // 'signin' ou 'signup'
+const AuthModal = ({ onClose, onSignIn, onSignUp, loading = false, error, defaultMode = 'signin' }) => {
+  const [mode, setMode] = useState(defaultMode) // 'signin' ou 'signup'
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
