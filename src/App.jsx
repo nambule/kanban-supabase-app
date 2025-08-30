@@ -214,6 +214,10 @@ function App() {
     return cols
   }, [columns, groupBy, statusFilterState, visibleIdsByColumn])
 
+  // Check if all compartments are empty (no tasks at all)
+  const hasAnyTasks = Object.keys(tasks).length > 0
+  const allColumnsEmpty = displayedColumns.every(col => (visibleIdsByColumn[col]?.length || 0) === 0)
+
   // Gestion du drag & drop
   const onDragEnd = (result) => {
     reorderTasks(result.source, result.destination, result.draggableId, groupBy, compartmentObjects)
@@ -305,18 +309,117 @@ function App() {
   // Redirection vers l'authentification si pas connecté
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen w-full bg-slate-50 dark:bg-slate-900 flex items-center justify-center">
-        <div className="text-center space-y-6 p-8">
-          <div>
-            <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">My Kanban Board</h1>
-            <p className="text-slate-600 dark:text-slate-400">Organize your tasks efficiently</p>
+      <div className="min-h-screen w-full bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
+        <div className="container mx-auto px-4 py-8 flex items-center justify-center min-h-screen">
+          <div className="max-w-4xl w-full">
+            <div className="grid lg:grid-cols-2 gap-12 items-center">
+              {/* Left side - Image and features */}
+              <div className="order-2 lg:order-1">
+                <div className="relative">
+                  {/* Kanban Board Illustration */}
+                  <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl p-6 border border-slate-200 dark:border-slate-700">
+                    <div className="grid grid-cols-3 gap-4">
+                      {/* Design Column */}
+                      <div className="space-y-3">
+                        <div className="bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 px-3 py-2 rounded-lg text-sm font-medium text-center">
+                          Design
+                        </div>
+                        <div className="bg-slate-100 dark:bg-slate-700 rounded-lg p-3 space-y-2">
+                          <div className="h-2 bg-slate-300 dark:bg-slate-500 rounded w-3/4"></div>
+                          <div className="h-2 bg-slate-300 dark:bg-slate-500 rounded w-1/2"></div>
+                        </div>
+                        <div className="bg-slate-100 dark:bg-slate-700 rounded-lg p-3 space-y-2">
+                          <div className="h-2 bg-slate-300 dark:bg-slate-500 rounded w-2/3"></div>
+                          <div className="h-2 bg-slate-300 dark:bg-slate-500 rounded w-4/5"></div>
+                        </div>
+                      </div>
+                      
+                      {/* Development Column */}
+                      <div className="space-y-3">
+                        <div className="bg-amber-100 dark:bg-amber-900 text-amber-700 dark:text-amber-300 px-3 py-2 rounded-lg text-sm font-medium text-center">
+                          Development
+                        </div>
+                        <div className="bg-slate-100 dark:bg-slate-700 rounded-lg p-3 space-y-2">
+                          <div className="h-2 bg-slate-300 dark:bg-slate-500 rounded w-4/5"></div>
+                          <div className="h-2 bg-slate-300 dark:bg-slate-500 rounded w-1/3"></div>
+                        </div>
+                      </div>
+                      
+                      {/* Launch Column */}
+                      <div className="space-y-3">
+                        <div className="bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300 px-3 py-2 rounded-lg text-sm font-medium text-center">
+                          Launch
+                        </div>
+                        <div className="bg-slate-100 dark:bg-slate-700 rounded-lg p-3 space-y-2">
+                          <div className="h-2 bg-slate-300 dark:bg-slate-500 rounded w-3/5"></div>
+                          <div className="h-2 bg-slate-300 dark:bg-slate-500 rounded w-4/5"></div>
+                        </div>
+                        <div className="bg-slate-100 dark:bg-slate-700 rounded-lg p-3 space-y-2">
+                          <div className="h-2 bg-slate-300 dark:bg-slate-500 rounded w-1/2"></div>
+                          <div className="h-2 bg-slate-300 dark:bg-slate-500 rounded w-2/3"></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Floating elements for visual appeal */}
+                  <div className="absolute -top-4 -right-4 w-8 h-8 bg-blue-500 rounded-full opacity-60 animate-pulse"></div>
+                  <div className="absolute -bottom-6 -left-6 w-12 h-12 bg-emerald-500 rounded-full opacity-40 animate-pulse" style={{ animationDelay: '1s' }}></div>
+                </div>
+                
+                {/* Features list */}
+                <div className="mt-8 space-y-4">
+                  <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-200">Why choose our Kanban Board?</h3>
+                  <div className="grid gap-3">
+                    <div className="flex items-center gap-3 text-slate-600 dark:text-slate-400">
+                      <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                      <span>Drag & drop task management</span>
+                    </div>
+                    <div className="flex items-center gap-3 text-slate-600 dark:text-slate-400">
+                      <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
+                      <span>Customizable compartments & colors</span>
+                    </div>
+                    <div className="flex items-center gap-3 text-slate-600 dark:text-slate-400">
+                      <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                      <span>Multiple view modes & filtering</span>
+                    </div>
+                    <div className="flex items-center gap-3 text-slate-600 dark:text-slate-400">
+                      <div className="w-2 h-2 bg-amber-500 rounded-full"></div>
+                      <span>Dark mode & responsive design</span>
+                    </div>
+                    <div className="flex items-center gap-3 text-slate-600 dark:text-slate-400">
+                      <div className="w-2 h-2 bg-rose-500 rounded-full"></div>
+                      <span>Flexible & adaptable to your unique workflow</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Right side - Sign in content */}
+              <div className="order-1 lg:order-2 text-center lg:text-left space-y-8">
+                <div>
+                  <div className="flex items-center justify-center lg:justify-start gap-2 mb-4">
+                    <h1 className="text-4xl lg:text-5xl font-bold text-slate-900 dark:text-white">My Kanban Board</h1>
+                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-700">
+                      FREE
+                    </span>
+                  </div>
+                  <p className="text-xl text-slate-600 dark:text-slate-400 mb-2">Organize your tasks efficiently</p>
+                  <p className="text-sm text-slate-500 dark:text-slate-500">✨ Completely free to use • No limits • No ads</p>
+                </div>
+                
+                <div className="space-y-4">
+                  <button 
+                    onClick={() => setAuthOpen(true)}
+                    className="w-full lg:w-auto px-8 py-4 rounded-xl bg-slate-900 dark:bg-slate-700 text-white hover:bg-slate-800 dark:hover:bg-slate-600 font-semibold text-lg transition-all duration-200 transform hover:scale-105 shadow-lg"
+                  >
+                    Get Started for Free
+                  </button>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">No credit card required • Sign up in seconds</p>
+                </div>
+              </div>
+            </div>
           </div>
-          <button 
-            onClick={() => setAuthOpen(true)}
-            className="px-6 py-3 rounded-xl bg-slate-900 dark:bg-slate-700 text-white hover:bg-slate-800 dark:hover:bg-slate-600 font-medium transition-colors"
-          >
-            Sign In
-          </button>
         </div>
         {authOpen && (
           <AuthModal
@@ -537,7 +640,17 @@ Quick Task
                   <div 
                     className="flex items-center justify-between px-2 py-1.5" 
                     style={groupBy === 'compartment' 
-                      ? compStyle(COMPARTMENT_COLORS[col] || COMPARTMENT_COLORS.PM) 
+                      ? (() => {
+                          const compartmentObj = compartmentObjects.find(c => c.name === col)
+                          if (compartmentObj && compartmentObj.color_bg) {
+                            return compStyle({
+                              bg: compartmentObj.color_bg,
+                              text: compartmentObj.color_text,
+                              border: compartmentObj.color_border
+                            })
+                          }
+                          return compStyle(COMPARTMENT_COLORS[col] || COMPARTMENT_COLORS.PM)
+                        })()
                       : undefined
                     }
                   >
@@ -589,6 +702,101 @@ Quick Task
             ))}
           </div>
         </DragDropContext>
+
+        {/* Empty State Guide - shown when no tasks exist */}
+        {!hasAnyTasks && (
+          <div className="mt-8 text-center">
+            <div className="max-w-2xl mx-auto bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 p-8 shadow-sm">
+              <div className="mb-6">
+                <h3 className="text-xl font-semibold text-slate-900 dark:text-white mb-3">
+                  Welcome to your Kanban Board! 🎯
+                </h3>
+                <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
+                  Get started by creating your first task. Here's how the board works:
+                </p>
+              </div>
+              
+              <div className="grid md:grid-cols-2 gap-6 text-left">
+                <div className="space-y-4">
+                  <div className="flex items-start gap-3">
+                    <div className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
+                      <span className="text-blue-600 dark:text-blue-400 text-sm font-semibold">1</span>
+                    </div>
+                    <div>
+                      <h4 className="font-medium text-slate-900 dark:text-white mb-1">Create Tasks</h4>
+                      <p className="text-sm text-slate-600 dark:text-slate-400">
+                        Click the <strong>"Add"</strong> button in any compartment to create a new task
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start gap-3">
+                    <div className="flex-shrink-0 w-6 h-6 rounded-full bg-green-100 dark:bg-green-900 flex items-center justify-center">
+                      <span className="text-green-600 dark:text-green-400 text-sm font-semibold">2</span>
+                    </div>
+                    <div>
+                      <h4 className="font-medium text-slate-900 dark:text-white mb-1">Organize</h4>
+                      <p className="text-sm text-slate-600 dark:text-slate-400">
+                        Drag and drop tasks between compartments and set priorities
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-3">
+                    <div className="flex-shrink-0 w-6 h-6 rounded-full bg-cyan-100 dark:bg-cyan-900 flex items-center justify-center">
+                      <span className="text-cyan-600 dark:text-cyan-400 text-sm font-semibold">3</span>
+                    </div>
+                    <div>
+                      <h4 className="font-medium text-slate-900 dark:text-white mb-1">Manage Compartments</h4>
+                      <p className="text-sm text-slate-600 dark:text-slate-400">
+                        Click your profile menu → <strong>"Settings"</strong> to customize compartment names and colors
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="space-y-4">
+                  <div className="flex items-start gap-3">
+                    <div className="flex-shrink-0 w-6 h-6 rounded-full bg-purple-100 dark:bg-purple-900 flex items-center justify-center">
+                      <span className="text-purple-600 dark:text-purple-400 text-sm font-semibold">4</span>
+                    </div>
+                    <div>
+                      <h4 className="font-medium text-slate-900 dark:text-white mb-1">Track Progress</h4>
+                      <p className="text-sm text-slate-600 dark:text-slate-400">
+                        Use different compartments to organize work by team, project, or workflow stage
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start gap-3">
+                    <div className="flex-shrink-0 w-6 h-6 rounded-full bg-orange-100 dark:bg-orange-900 flex items-center justify-center">
+                      <span className="text-orange-600 dark:text-orange-400 text-sm font-semibold">5</span>
+                    </div>
+                    <div>
+                      <h4 className="font-medium text-slate-900 dark:text-white mb-1">Quick Tasks</h4>
+                      <p className="text-sm text-slate-600 dark:text-slate-400">
+                        Use <strong>"Quick Task"</strong> for rapid idea capture, then organize later
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="mt-6 pt-6 border-t border-slate-200 dark:border-slate-700">
+                <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
+                  💡 <strong>Tip:</strong> You can group tasks by Compartment, Priority, or Status using the dropdown above
+                </p>
+                <button 
+                  onClick={() => openCreate(displayedColumns[0])} 
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-900 dark:bg-slate-700 text-white hover:bg-slate-800 dark:hover:bg-slate-600 font-medium transition-colors"
+                >
+                  <Plus className="h-4 w-4" />
+                  Create Your First Task
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Modale de tâche */}

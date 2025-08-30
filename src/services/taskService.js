@@ -19,7 +19,8 @@ export const taskService = {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) throw new Error('User not authenticated')
 
-    const { data, error } = await supabase
+    // Try with foreign key join first, fall back to simple query if it fails
+    let { data, error } = await supabase
       .from('tasks')
       .select(`
         *,
@@ -30,6 +31,42 @@ export const taskService = {
       `)
       .eq('user_id', user.id)
       .order('created_at', { ascending: true })
+    
+    if (error && error.message.includes('fk_tasks_compartment')) {
+      console.log('🔄 Foreign key join failed, trying simple query:', error.message)
+      // Fall back to simple query without join
+      const result = await supabase
+        .from('tasks')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: true })
+      
+      data = result.data
+      error = result.error
+      
+      // Manually fetch compartment names for tasks
+      if (data && data.length > 0) {
+        const compartmentIds = [...new Set(data.map(t => t.compartment_id).filter(Boolean))]
+        if (compartmentIds.length > 0) {
+          const { data: compartments } = await supabase
+            .from('compartments')
+            .select('id, name')
+            .in('id', compartmentIds)
+            .eq('user_id', user.id)
+          
+          const compartmentMap = {}
+          compartments?.forEach(c => {
+            compartmentMap[c.id] = c
+          })
+          
+          // Add compartment info to tasks
+          data = data.map(task => ({
+            ...task,
+            compartments: task.compartment_id ? compartmentMap[task.compartment_id] : null
+          }))
+        }
+      }
+    }
     
     if (error) throw error
     return data || []

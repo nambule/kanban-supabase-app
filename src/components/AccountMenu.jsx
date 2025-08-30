@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react'
-import { User, LogOut, ChevronDown, Settings } from 'lucide-react'
+import { User, LogOut, ChevronDown, Settings, HelpCircle } from 'lucide-react'
 import AccountModal from './AccountModal'
 import SettingsModal from './SettingsModal'
+import HelpModal from './HelpModal'
 
 /**
  * Menu compte utilisateur avec dropdown style Gmail
@@ -10,6 +11,7 @@ const AccountMenu = ({ user, onSignOut }) => {
   const [isOpen, setIsOpen] = useState(false)
   const [showAccountModal, setShowAccountModal] = useState(false)
   const [showSettingsModal, setShowSettingsModal] = useState(false)
+  const [showHelpModal, setShowHelpModal] = useState(false)
   const menuRef = useRef(null)
 
   // Fermer le menu au clic extérieur
@@ -61,9 +63,13 @@ const AccountMenu = ({ user, onSignOut }) => {
     return colors[Math.abs(hash) % colors.length]
   }
 
-  const handleSignOut = () => {
-    setIsOpen(false)
-    onSignOut()
+  const handleSignOut = async () => {
+    try {
+      setIsOpen(false)
+      await onSignOut()
+    } catch (error) {
+      console.error('Error signing out:', error)
+    }
   }
 
   return (
@@ -133,6 +139,18 @@ My Account
 Settings
               </button>
 
+              {/* Option Help */}
+              <button
+                className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-3"
+                onClick={() => {
+                  setIsOpen(false)
+                  setShowHelpModal(true)
+                }}
+              >
+                <HelpCircle className="w-4 h-4 text-slate-500" />
+Help
+              </button>
+
               {/* Divider */}
               <div className="border-t border-slate-100 my-1" />
 
@@ -161,6 +179,13 @@ Sign Out
       {showSettingsModal && (
         <SettingsModal
           onClose={() => setShowSettingsModal(false)}
+        />
+      )}
+
+      {/* Modale d'aide */}
+      {showHelpModal && (
+        <HelpModal
+          onClose={() => setShowHelpModal(false)}
         />
       )}
     </div>
