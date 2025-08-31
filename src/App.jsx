@@ -7,7 +7,8 @@ import {
   ChevronDown,
   Eye,
   Moon,
-  Sun
+  Sun,
+  MessageCircle
 } from 'lucide-react'
 
 import { useTasks } from './hooks/useTasks'
@@ -864,6 +865,18 @@ Quick Task
           loading={quickLoading}
         />
       )}
+
+      {/* Floating Feedback Button */}
+      <button
+        onClick={() => window.open('https://forms.gle/kYEEkbSznQYqZunu7', '_blank', 'noopener,noreferrer')}
+        className="fixed bottom-6 right-6 w-12 h-12 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center z-30 group"
+        title="Give Feedback"
+      >
+        <MessageCircle className="w-5 h-5" />
+        <span className="absolute right-14 bottom-3 bg-slate-900 text-white text-xs px-2 py-1 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
+          Give Feedback
+        </span>
+      </button>
     </div>
   )
 }

@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react'
-import { User, LogOut, ChevronDown, Settings, HelpCircle } from 'lucide-react'
+import { User, LogOut, ChevronDown, Settings, HelpCircle, MessageCircle } from 'lucide-react'
 import AccountModal from './AccountModal'
 import SettingsModal from './SettingsModal'
 import HelpModal from './HelpModal'
@@ -149,6 +149,18 @@ Settings
               >
                 <HelpCircle className="w-4 h-4 text-slate-500" />
 Help
+              </button>
+
+              {/* Option Feedback */}
+              <button
+                className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-3"
+                onClick={() => {
+                  setIsOpen(false)
+                  window.open('https://forms.gle/kYEEkbSznQYqZunu7', '_blank', 'noopener,noreferrer')
+                }}
+              >
+                <MessageCircle className="w-4 h-4 text-slate-500" />
+Give Feedback
               </button>
 
               {/* Divider */}
