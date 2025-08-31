@@ -302,7 +302,15 @@ function App() {
   if (authLoading) {
     return (
       <div className="min-h-screen w-full bg-slate-50 dark:bg-slate-900 flex items-center justify-center">
-        <div className="text-slate-600 dark:text-slate-400">Loading...</div>
+        <div className="flex flex-col items-center gap-4">
+          <div className="relative">
+            <div className="w-12 h-12 border-4 border-slate-200 dark:border-slate-700 border-t-slate-600 dark:border-t-slate-400 rounded-full animate-spin"></div>
+            <div className="w-8 h-8 border-4 border-transparent border-t-blue-500 rounded-full animate-spin absolute top-2 left-2" style={{animationDuration: '0.8s'}}></div>
+          </div>
+          <div className="text-slate-600 dark:text-slate-400 text-sm">
+            Connecting<span className="animate-pulse">...</span>
+          </div>
+        </div>
       </div>
     )
   }
@@ -402,7 +410,7 @@ function App() {
                       FREE
                     </span>
                   </div>
-                  <p className="text-xl text-slate-600 dark:text-slate-400 mb-2">Organize your tasks efficiently</p>
+                  <p className="text-xl text-slate-600 dark:text-slate-400 mb-2">Task management that adapts to your workflow</p>
                   <p className="text-lg text-slate-600 dark:text-slate-400 mb-3">As simple or as powerful as you need it to be</p>
                   <p className="text-sm text-slate-500 dark:text-slate-500">✨ Completely free to use • No limits • No ads</p>
                 </div>
@@ -453,7 +461,21 @@ function App() {
   if (tasksLoading) {
     return (
       <div className="min-h-screen w-full bg-slate-50 dark:bg-slate-900 flex items-center justify-center">
-        <div className="text-slate-600 dark:text-slate-400">Loading...</div>
+        <div className="flex flex-col items-center gap-4">
+          <div className="relative">
+            <div className="w-16 h-16 border-4 border-slate-200 dark:border-slate-700 border-t-emerald-500 rounded-full animate-spin"></div>
+            <div className="w-10 h-10 border-4 border-transparent border-t-blue-500 rounded-full animate-spin absolute top-3 left-3" style={{animationDuration: '1.5s', animationDirection: 'reverse'}}></div>
+            <div className="w-4 h-4 bg-purple-500 rounded-full animate-pulse absolute top-6 left-6"></div>
+          </div>
+          <div className="text-slate-600 dark:text-slate-400 text-sm font-medium">
+            Loading your tasks<span className="animate-pulse">...</span>
+          </div>
+          <div className="flex gap-1">
+            <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{animationDelay: '0ms'}}></div>
+            <div className="w-2 h-2 bg-emerald-500 rounded-full animate-bounce" style={{animationDelay: '150ms'}}></div>
+            <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{animationDelay: '300ms'}}></div>
+          </div>
+        </div>
       </div>
     )
   }
