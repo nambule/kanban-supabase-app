@@ -1,0 +1,12 @@
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://mytaskboard.vercel.app/sitemap.xml
+
+# Block admin/private areas (if any)
+# Disallow: /admin/
+# Disallow: /private/
+
+# Crawl-delay (optional - helps prevent overloading your server)
+Crawl-delay: 1

@@ -497,7 +497,7 @@ function App() {
       {/* Barre supérieure */}
       <header className="sticky top-0 z-20 backdrop-blur bg-white/80 dark:bg-slate-900/80 border-b border-slate-200 dark:border-slate-700">
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center gap-3">
-          <div className="text-xl font-semibold tracking-tight text-slate-900 dark:text-white">My Board</div>
+          <div className="text-xl font-semibold tracking-tight text-slate-900 dark:text-white">My Task Board</div>
 
           <div className="ml-auto flex items-center gap-2">
             {/* Recherche */}
