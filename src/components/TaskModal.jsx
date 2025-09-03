@@ -6,12 +6,14 @@ import {
   PRIORITIES, 
   STATUSES, 
   SIZES,
+  WHEN_OPTIONS,
   PRIORITY_STYLES,
   PRIORITY_DOT,
   STATUS_COLORS,
-  SIZE_COLORS
+  SIZE_COLORS,
+  WHEN_COLORS
 } from '../utils/constants'
-import { badgeStyle } from '../utils/helpers'
+import { badgeStyle, styleWhen } from '../utils/helpers'
 
 /**
  * Modale pour créer/éditer une tâche
@@ -45,6 +47,7 @@ const TaskModal = ({
     (groupBy === "status" && STATUSES.includes(initialColumn) ? initialColumn : "To Do")
   )
   const [size, setSize] = useState(editing?.size || "M")
+  const [when, setWhen] = useState(editing?.when || "")
   const [note, setNote] = useState(editing?.note || "")
   const [dueDate, setDueDate] = useState(editing?.dueDate || "")
   const [startDate, setStartDate] = useState(editing?.startDate || "")
@@ -115,6 +118,7 @@ const TaskModal = ({
       compartment,
       status,
       size,
+      when,
       note,
       dueDate,
       startDate,
@@ -284,6 +288,46 @@ const TaskModal = ({
                     </SelectContent>
                   </Select>
                 </div>
+              </div>
+            </div>
+
+            {/* Next Action (When) */}
+            <div>
+              <label className="text-sm text-slate-600">Next action</label>
+              <div className="mt-1">
+                <Select value={when} onValueChange={setWhen}>
+                  <SelectTrigger className="w-full rounded-xl border border-slate-300 px-2 py-2">
+                    <div className="flex items-center">
+                      <span 
+                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-xs" 
+                        style={styleWhen(when)}
+                      >
+                        {when || "To be defined"}
+                      </span>
+                    </div>
+                  </SelectTrigger>
+                  <SelectContent className="rounded-xl border border-slate-200">
+                    {/* Option de vidage */}
+                    <SelectItem value="">
+                      <span 
+                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-xs" 
+                        style={styleWhen("")}
+                      >
+                        To be defined
+                      </span>
+                    </SelectItem>
+                    {WHEN_OPTIONS.filter(x => x !== "").map((opt) => (
+                      <SelectItem key={opt} value={opt}>
+                        <span 
+                          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-xs" 
+                          style={styleWhen(opt)}
+                        >
+                          {opt}
+                        </span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 

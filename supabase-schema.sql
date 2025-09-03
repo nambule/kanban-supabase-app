@@ -1,4 +1,4 @@
--- Schema SQL pour Supabase - Application Kanban
+-- Schema SQL pour Supabase - Application My Task Board
 -- À exécuter dans l'éditeur SQL de Supabase
 
 -- Table pour les tâches principales

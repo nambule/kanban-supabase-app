@@ -13,7 +13,7 @@ import {
 import { badgeStyle, compStyle, styleWhen, formatDateFR, isPast } from '../utils/helpers'
 
 /**
- * Composant pour afficher une carte de tâche dans le Kanban
+ * Composant pour afficher une carte de tâche dans le tableau des tâches
  */
 const TaskCard = ({ 
   id, 

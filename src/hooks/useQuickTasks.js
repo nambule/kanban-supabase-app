@@ -49,9 +49,24 @@ export const useQuickTasks = () => {
   // Listen for auth state changes to load quick tasks when user becomes authenticated
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('⚡ useQuickTasks auth event:', event)
+      
+      // Ignore token refresh events to prevent unnecessary reloads when switching tabs
+      if (event === 'TOKEN_REFRESHED') {
+        console.log('⚡ Ignoring TOKEN_REFRESHED in useQuickTasks')
+        return
+      }
+      
+      // Only reload quick tasks for genuine sign in events, not tab switches
       if (event === 'SIGNED_IN' && session?.user) {
-        console.log('🔄 User signed in, loading quick tasks...')
-        loadQuickTasks()
+        // Check if this might be a tab switch (user was already signed in)
+        const currentUser = quickTasks.length >= 0 // Even 0 quick tasks means we loaded before
+        if (quickTasks.length === 0 && loading) { // Only load if we haven't loaded yet
+          console.log('🔄 New user sign in, loading quick tasks...')
+          loadQuickTasks()
+        } else {
+          console.log('⚡ Skipping quick tasks reload - likely tab switch')
+        }
       } else if (event === 'SIGNED_OUT') {
         console.log('🔄 User signed out, clearing quick tasks...')
         setQuickTasks([])
@@ -60,7 +75,7 @@ export const useQuickTasks = () => {
     })
 
     return () => subscription.unsubscribe()
-  }, [loadQuickTasks])
+  }, [loadQuickTasks, quickTasks.length, loading])
 
   // Ajouter une tâche rapide
   const addQuickTask = useCallback(async (title) => {

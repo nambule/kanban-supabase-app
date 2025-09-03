@@ -23,6 +23,7 @@ import AccountMenu from './components/AccountMenu'
 import {
   PRIORITIES,
   STATUSES,
+  WHEN_OPTIONS,
   PRIORITY_STYLES,
   PRIORITY_DOT,
   STATUS_COLORS,
@@ -31,10 +32,10 @@ import {
   PRIORITY_RANK
 } from './utils/constants'
 import { useCompartments } from './hooks/useCompartments'
-import { badgeStyle, compStyle } from './utils/helpers'
+import { badgeStyle, compStyle, styleWhen } from './utils/helpers'
 
 /**
- * Application Kanban principale avec intégration Supabase
+ * Application My Task Board principale avec intégration Supabase
  */
 function App() {
   // État local de l'interface
@@ -50,8 +51,9 @@ function App() {
     P1: true, P2: true, P3: true, P4: true, P5: true 
   })
   const [statusFilterState, setStatusFilterState] = useState({ 
-    "To Do": true, "To Analyze": true, "In Progress": true, "Done": false 
+    "To Do": true, "To Analyze": true, "In Progress": true, "Done": false, "Cancelled": false 
   })
+  const [nextActionFilter, setNextActionFilter] = useState("All")
   const [sortBy, setSortBy] = useState("none")
   const [modal, setModal] = useState({ 
     open: false, editingId: null, initialColumn: null, prefillTitle: "", fromQuickId: null 
@@ -70,18 +72,6 @@ function App() {
     }
   }, [darkMode])
 
-  // Listen for compartment updates from settings
-  useEffect(() => {
-    const handleCompartmentUpdate = (event) => {
-      setCompartments(event.detail.compartments)
-    }
-
-    window.addEventListener('compartmentsUpdated', handleCompartmentUpdate)
-    
-    return () => {
-      window.removeEventListener('compartmentsUpdated', handleCompartmentUpdate)
-    }
-  }, [])
 
   // Hook d'authentification
   const { 
@@ -172,11 +162,37 @@ function App() {
         const t = tasks[id]
         if (!t) return false
         
-        const matchesSearch = !search || t.title.toLowerCase().includes(search.toLowerCase())
+        const matchesSearch = !search || (() => {
+          const searchTerm = search.toLowerCase()
+          
+          // Search in task title
+          if (t.title.toLowerCase().includes(searchTerm)) return true
+          
+          // Search in task notes
+          if (t.note && t.note.toLowerCase().includes(searchTerm)) return true
+          
+          // Search in subtasks
+          if (t.subtasks && Array.isArray(t.subtasks)) {
+            return t.subtasks.some(subtask => 
+              subtask.title && subtask.title.toLowerCase().includes(searchTerm)
+            )
+          }
+          
+          return false
+        })()
         const matchesPriority = priorityFilter[t.priority]
         const matchesStatus = statusFilterState[t.status]
         
-        return matchesSearch && matchesPriority && matchesStatus
+        // Next Action filter logic
+        const matchesNextAction = nextActionFilter === "All" || (() => {
+          const taskWhen = t.when || ""
+          const taskWhenOrder = WHEN_ORDER[taskWhen] || 99
+          const filterWhenOrder = WHEN_ORDER[nextActionFilter] || 99
+          // Show tasks that have next action timing <= selected filter
+          return taskWhenOrder <= filterWhenOrder
+        })()
+        
+        return matchesSearch && matchesPriority && matchesStatus && matchesNextAction
       })
       
       // Fonctions de tri
@@ -202,7 +218,7 @@ function App() {
     })
     
     return res
-  }, [order, groupBy, columns, tasks, search, priorityFilter, statusFilterState, sortBy])
+  }, [order, groupBy, columns, tasks, search, priorityFilter, statusFilterState, nextActionFilter, sortBy])
 
   // Colonnes affichées (masquer "Terminé" si vide et pas filtré)
   const displayedColumns = useMemo(() => {
@@ -296,7 +312,8 @@ function App() {
   // Réinitialiser les filtres
   const resetFilters = () => {
     setPriorityFilter({ P1: true, P2: true, P3: true, P4: true, P5: true })
-    setStatusFilterState({ "To Do": true, "To Analyze": true, "In Progress": true, "Done": true })
+    setStatusFilterState({ "To Do": true, "To Analyze": true, "In Progress": true, "Done": false, "Cancelled": false })
+    setNextActionFilter("All")
   }
 
   // Affichage du chargement de l'authentification
@@ -548,6 +565,40 @@ function App() {
                     </span>
                   </label>
                 ))}
+
+                <div className="text-xs font-medium uppercase text-slate-500 mt-3 mb-2">Next Action</div>
+                <div className="space-y-1">
+                  {/* All option */}
+                  <label className="flex items-center gap-2 py-1 text-sm">
+                    <input 
+                      type="radio" 
+                      name="nextActionFilter"
+                      checked={nextActionFilter === "All"} 
+                      onChange={() => setNextActionFilter("All")} 
+                    />
+                    <span className="text-xs text-slate-600 dark:text-slate-400">
+                      All tasks
+                    </span>
+                  </label>
+                  
+                  {/* When options */}
+                  {WHEN_OPTIONS.filter(opt => opt !== "").map((opt) => (
+                    <label key={opt} className="flex items-center gap-2 py-1 text-sm">
+                      <input 
+                        type="radio" 
+                        name="nextActionFilter"
+                        checked={nextActionFilter === opt} 
+                        onChange={() => setNextActionFilter(opt)} 
+                      />
+                      <span 
+                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs" 
+                        style={styleWhen(opt)}
+                      >
+                        {opt}
+                      </span>
+                    </label>
+                  ))}
+                </div>
                 
                 <div className="mt-3 flex items-center justify-between">
                   <div className="text-xs text-slate-500">Reset filters</div>
@@ -664,7 +715,7 @@ Quick Task
         </div>
       </header>
 
-      {/* Tableau Kanban */}
+      {/* Tableau des tâches */}
       <div className="max-w-7xl mx-auto px-4 py-6">
         <DragDropContext onDragEnd={onDragEnd}>
           <div 
@@ -747,7 +798,7 @@ Quick Task
             <div className="max-w-2xl mx-auto bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 p-8 shadow-sm">
               <div className="mb-6">
                 <h3 className="text-xl font-semibold text-slate-900 dark:text-white mb-3">
-                  Welcome to your Kanban Board! 🎯
+                  Welcome to My Task Board! 🎯
                 </h3>
                 <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
                   Get started by creating your first task. Here's how the board works:

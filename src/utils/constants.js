@@ -1,4 +1,4 @@
-// Configuration et constantes de l'application Kanban
+// Configuration et constantes de l'application My Task Board
 
 // Mapping pour la compatibilité avec les données existantes en français
 export const STATUS_MAPPING = {
@@ -44,9 +44,9 @@ export const getCompartments = () => {
 // Legacy export for backward compatibility - DEPRECATED
 export const COMPARTMENTS = DEFAULT_COMPARTMENTS
 export const PRIORITIES = ["P1", "P2", "P3", "P4", "P5"]
-export const STATUSES = ["To Do", "To Analyze", "In Progress", "Done"]
+export const STATUSES = ["To Do", "To Analyze", "In Progress", "Done", "Cancelled"]
 export const SIZES = ["S", "M", "L", "XL", "XXL"]
-export const WHEN_OPTIONS = ["", "Today", "This Week", "Next Week", "This Month"]
+export const WHEN_OPTIONS = ["", "Today", "This Week", "Next Week", "This Month", "Next Month"]
 
 // Couleurs et styles pour l'interface
 export const WHEN_COLORS = {
@@ -55,6 +55,7 @@ export const WHEN_COLORS = {
   "This Week": { bg: "#FFEDD5", text: "#C2410C" },  // orange-100 / 700
   "Next Week": { bg: "#FEF9C3", text: "#A16207" }, // amber-100 / 700 (warm yellow)
   "This Month": { bg: "#DBEAFE", text: "#1D4ED8" },     // blue-100 / 700
+  "Next Month": { bg: "#EDE9FE", text: "#5B21B6" }, // violet-100 / 700
 }
 
 export const WHEN_ORDER = { 
@@ -62,7 +63,8 @@ export const WHEN_ORDER = {
   "This Week": 2, 
   "Next Week": 3, 
   "This Month": 4, 
-  "": 5 
+  "Next Month": 5, 
+  "": 6 
 }
 
 export const PRIORITY_STYLES = {
@@ -89,6 +91,7 @@ export const STATUS_COLORS = {
   "To Analyze":{ bg: "#E0F2FE", text: "#075985", border: "#BAE6FD" }, // sky-100/800/200
   "In Progress":  { bg: "#FEF3C7", text: "#92400E", border: "#FDE68A" }, // amber-100/800/200
   "Done":   { bg: "#DCFCE7", text: "#065F46", border: "#BBF7D0" }, // emerald-100/800/200
+  "Cancelled": { bg: "#FEF2F2", text: "#7F1D1D", border: "#FECACA" }, // red-50/900/200
 }
 
 export const SIZE_COLORS = {

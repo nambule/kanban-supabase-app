@@ -1,8 +1,8 @@
 {
-  "name": "kanban-supabase",
+  "name": "my-task-board",
   "version": "1.0.0",
   "type": "module",
-  "description": "Application Kanban avec Supabase",
+  "description": "My Task Board - Application de gestion des tâches avec Supabase",
   "main": "src/App.jsx",
   "scripts": {
     "dev": "vite",

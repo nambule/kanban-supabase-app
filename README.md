@@ -1,11 +1,11 @@
-# Kanban Task Management Board
+# My Task Board
 
-A modern, full-featured Kanban board application built with React, Supabase, and TailwindCSS. Features a clean, professional interface with advanced task management capabilities and real-time collaboration.
+A modern, full-featured task management application built with React, Supabase, and TailwindCSS. Features a clean, professional interface with advanced task management capabilities and real-time collaboration.
 
 ## ✨ Features
 
 ### Core Functionality
-- 🎯 **Drag & Drop Kanban Board** - Intuitive task management with smooth animations
+- 🎯 **Drag & Drop Task Board** - Intuitive task management with smooth animations
 - 📊 **Multiple View Modes** - Group tasks by compartment, priority, or status
 - 🔍 **Advanced Filtering** - Filter by priority, status with quick reset options
 - ⚡ **Quick Tasks** - Express task creation for rapid capture
@@ -69,7 +69,7 @@ src/
 1. **Clone and install dependencies:**
    ```bash
    git clone <your-repo-url>
-   cd kanban
+   cd my-task-board
    npm install
    ```
 

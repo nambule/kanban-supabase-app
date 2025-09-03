@@ -5,7 +5,7 @@ import { transformTaskFromDB, reorganizeTaskOrder, createEmptyOrder } from '../u
 import { DEFAULT_COMPARTMENTS, PRIORITIES, STATUSES } from '../utils/constants'
 
 /**
- * Hook personnalisé pour gérer les tâches Kanban avec Supabase
+ * Hook personnalisé pour gérer les tâches avec Supabase
  */
 export const useTasks = () => {
   const [tasks, setTasks] = useState({})
@@ -125,9 +125,24 @@ export const useTasks = () => {
   // Listen for auth state changes to load tasks when user becomes authenticated
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('📋 useTasks auth event:', event)
+      
+      // Ignore token refresh events to prevent unnecessary reloads when switching tabs
+      if (event === 'TOKEN_REFRESHED') {
+        console.log('📋 Ignoring TOKEN_REFRESHED in useTasks')
+        return
+      }
+      
+      // Only reload tasks for genuine sign in events, not tab switches
       if (event === 'SIGNED_IN' && session?.user) {
-        console.log('🔄 User signed in, loading tasks...')
-        loadTasks()
+        // Check if this might be a tab switch (user was already signed in)
+        const currentUser = Object.keys(tasks).length > 0 // If we have data, user was likely already signed in
+        if (!currentUser) {
+          console.log('🔄 New user sign in, loading tasks...')
+          loadTasks()
+        } else {
+          console.log('📋 Skipping tasks reload - likely tab switch')
+        }
       } else if (event === 'SIGNED_OUT') {
         console.log('🔄 User signed out, clearing tasks...')
         setTasks({})
@@ -137,7 +152,7 @@ export const useTasks = () => {
     })
 
     return () => subscription.unsubscribe()
-  }, [loadTasks])
+  }, [loadTasks, tasks])
 
   // Listen for user data seeding events to refresh tasks
   useEffect(() => {

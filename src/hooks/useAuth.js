@@ -9,6 +9,24 @@ export const useAuth = () => {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [isTabSwitching, setIsTabSwitching] = useState(false)
+
+  // Track tab visibility to detect tab switching
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        console.log('🔄 Tab hidden - setting tab switching flag')
+        setIsTabSwitching(true)
+      } else {
+        console.log('🔄 Tab visible - clearing tab switching flag after delay')
+        // Clear the flag after a short delay to allow for any auth events
+        setTimeout(() => setIsTabSwitching(false), 1000)
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
+  }, [])
 
   // Vérifier la session actuelle au démarrage
   useEffect(() => {
@@ -30,6 +48,20 @@ export const useAuth = () => {
     // Écouter les changements d'authentification
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('🔐 Auth state change event:', event, session?.user?.id, 'isTabSwitching:', isTabSwitching)
+        
+        // Ignore events during tab switching to prevent unnecessary reloads
+        if (isTabSwitching && (event === 'TOKEN_REFRESHED' || event === 'SIGNED_IN')) {
+          console.log('🔄 Ignoring auth event during tab switching to prevent reload')
+          return
+        }
+        
+        // Ignore token refresh events to prevent unnecessary reloads when switching tabs
+        if (event === 'TOKEN_REFRESHED') {
+          console.log('🔄 Ignoring TOKEN_REFRESHED event to prevent reload')
+          return
+        }
+        
         setUser(session?.user || null)
         setLoading(false)
         

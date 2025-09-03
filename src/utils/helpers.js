@@ -1,6 +1,6 @@
-import { WHEN_COLORS, STATUS_COLORS, SIZE_COLORS, COMPARTMENT_COLORS, STATUS_MAPPING, WHEN_MAPPING, DEFAULT_COMPARTMENTS } from './constants'
+import { WHEN_COLORS, STATUS_COLORS, SIZE_COLORS, COMPARTMENT_COLORS, STATUS_MAPPING, WHEN_MAPPING, DEFAULT_COMPARTMENTS, STATUSES, PRIORITIES } from './constants'
 
-// Fonctions utilitaires pour l'application Kanban
+// Fonctions utilitaires pour l'application My Task Board
 
 export const uid = () => Math.random().toString(36).slice(2, 10)
 
@@ -95,8 +95,8 @@ export const createEmptyOrder = (compartments, priorities, statuses) => {
 export const reorganizeTaskOrder = (tasks, groupBy) => {
   const order = createEmptyOrder(
     DEFAULT_COMPARTMENTS,
-    ["P1", "P2", "P3", "P4", "P5"],
-    ["To Do", "To Analyze", "In Progress", "Done"]
+    PRIORITIES,
+    STATUSES
   )
 
   Object.values(tasks).forEach(task => {
@@ -112,4 +112,87 @@ export const reorganizeTaskOrder = (tasks, groupBy) => {
   })
 
   return order
+}
+
+// Palette de couleurs disponibles pour les nouveaux compartiments
+const AVAILABLE_COMPARTMENT_COLORS = [
+  // Indigo variations
+  { bg: "#EEF2FF", text: "#3730A3", border: "#C7D2FE", name: "indigo-soft" },
+  { bg: "#E0E7FF", text: "#3730A3", border: "#A5B4FC", name: "indigo-medium" },
+  
+  // Cyan/Teal variations  
+  { bg: "#ECFEFF", text: "#155E75", border: "#A5F3FC", name: "cyan-soft" },
+  { bg: "#CCFBF1", text: "#134E4A", border: "#99F6E4", name: "teal-soft" },
+  
+  // Red/Pink variations
+  { bg: "#FEE2E2", text: "#991B1B", border: "#FECACA", name: "red-soft" },
+  { bg: "#FFE4E6", text: "#9F1239", border: "#FECDD3", name: "rose-soft" },
+  
+  // Purple variations
+  { bg: "#FAE8FF", text: "#6B21A8", border: "#F5D0FE", name: "purple-soft" },
+  { bg: "#EDE9FE", text: "#5B21B6", border: "#DDD6FE", name: "violet-soft" },
+  
+  // Green variations
+  { bg: "#DCFCE7", text: "#065F46", border: "#BBF7D0", name: "emerald-soft" },
+  { bg: "#D1FAE5", text: "#065F46", border: "#A7F3D0", name: "green-soft" },
+  
+  // Blue variations
+  { bg: "#DBEAFE", text: "#1E40AF", border: "#BFDBFE", name: "blue-soft" },
+  { bg: "#E0F2FE", text: "#075985", border: "#BAE6FD", name: "sky-soft" },
+  
+  // Yellow/Orange variations
+  { bg: "#FEF3C7", text: "#92400E", border: "#FDE68A", name: "amber-soft" },
+  { bg: "#FFEDD5", text: "#C2410C", border: "#FED7AA", name: "orange-soft" },
+  
+  // Slate variations
+  { bg: "#F1F5F9", text: "#334155", border: "#CBD5E1", name: "slate-soft" },
+  { bg: "#F8FAFC", text: "#475569", border: "#E2E8F0", name: "slate-light" },
+]
+
+/**
+ * Sélectionne intelligemment une couleur pour un nouveau compartiment
+ * en évitant les couleurs déjà utilisées par les compartiments existants
+ */
+export const selectCompartmentColor = (existingCompartments = []) => {
+  // Récupérer les couleurs actuellement utilisées
+  const usedColors = new Set()
+  
+  // Couleurs des compartiments hardcodées
+  Object.values(COMPARTMENT_COLORS).forEach(color => {
+    usedColors.add(`${color.bg}-${color.text}-${color.border}`)
+  })
+  
+  // Couleurs des compartiments en base de données
+  existingCompartments.forEach(compartment => {
+    if (compartment.color_bg && compartment.color_text && compartment.color_border) {
+      usedColors.add(`${compartment.color_bg}-${compartment.color_text}-${compartment.color_border}`)
+    }
+  })
+  
+  console.log('🎨 Used colors:', Array.from(usedColors))
+  
+  // Trouver la première couleur disponible
+  for (const color of AVAILABLE_COMPARTMENT_COLORS) {
+    const colorKey = `${color.bg}-${color.text}-${color.border}`
+    if (!usedColors.has(colorKey)) {
+      console.log('🎨 Selected color for new compartment:', color.name)
+      return {
+        bg: color.bg,
+        text: color.text,
+        border: color.border
+      }
+    }
+  }
+  
+  // Si toutes les couleurs sont prises, utiliser une variation aléatoire
+  const randomColor = AVAILABLE_COMPARTMENT_COLORS[
+    Math.floor(Math.random() * AVAILABLE_COMPARTMENT_COLORS.length)
+  ]
+  
+  console.log('🎨 All colors used, using random:', randomColor.name)
+  return {
+    bg: randomColor.bg,
+    text: randomColor.text,
+    border: randomColor.border
+  }
 }

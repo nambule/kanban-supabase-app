@@ -1,4 +1,5 @@
 import { supabase } from './supabase'
+import { selectCompartmentColor } from '../utils/helpers'
 
 /**
  * Service pour gérer les compartiments utilisateur
@@ -28,6 +29,9 @@ export const compartmentService = {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) throw new Error('User not authenticated')
 
+    // Récupérer tous les compartiments existants pour éviter les couleurs dupliquées
+    const existingCompartments = await this.getUserCompartments()
+
     // Si aucune position spécifiée, mettre à la fin
     if (position === null) {
       const { data: existing } = await supabase
@@ -40,12 +44,18 @@ export const compartmentService = {
       position = existing && existing.length > 0 ? existing[0].position + 1 : 0
     }
 
+    // Sélectionner intelligemment une couleur unique
+    const selectedColor = selectCompartmentColor(existingCompartments)
+
     const { data, error } = await supabase
       .from('compartments')
       .insert({
         name: name.trim(),
         user_id: user.id,
-        position
+        position,
+        color_bg: selectedColor.bg,
+        color_text: selectedColor.text,
+        color_border: selectedColor.border
       })
       .select()
       .single()

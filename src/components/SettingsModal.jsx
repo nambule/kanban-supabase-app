@@ -7,7 +7,7 @@ import { useCompartments } from '../hooks/useCompartments'
  * Modal for managing application settings (compartments management)
  */
 const SettingsModal = ({ onClose }) => {
-  // Handle close with potential reload
+  // Handle close - reload for any compartment changes
   const handleClose = () => {
     if (hasChanges) {
       console.log('🔄 Compartments changed, reloading page...')

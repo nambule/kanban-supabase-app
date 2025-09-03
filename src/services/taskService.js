@@ -1,7 +1,7 @@
 import { supabase } from './supabase'
 
 /**
- * Service pour gérer les tâches Kanban avec Supabase
+ * Service pour gérer les tâches avec Supabase
  * Structure de table attendue :
  * - tasks: id, title, priority, compartment, status, size, note, when, due_date, start_date, hours, time_allocation, flagged, subtasks, completion, user_id, created_at, updated_at
  * - quick_tasks: id, title, user_id, created_at

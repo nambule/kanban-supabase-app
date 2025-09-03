@@ -60,9 +60,24 @@ export const useCompartments = () => {
   // Listen for auth state changes to load compartments when user becomes authenticated
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('📦 useCompartments auth event:', event)
+      
+      // Ignore token refresh and tab switching events to prevent unnecessary reloads
+      if (event === 'TOKEN_REFRESHED') {
+        console.log('📦 Ignoring TOKEN_REFRESHED in useCompartments')
+        return
+      }
+      
+      // Only reload compartments for genuine sign in events, not tab switches
       if (event === 'SIGNED_IN' && session?.user) {
-        console.log('🔄 User signed in, loading compartments...')
-        loadCompartments()
+        // Check if this might be a tab switch (user was already signed in)
+        const currentUser = compartments.length > 0 // If we have data, user was likely already signed in
+        if (!currentUser) {
+          console.log('🔄 New user sign in, loading compartments...')
+          loadCompartments()
+        } else {
+          console.log('📦 Skipping compartments reload - likely tab switch')
+        }
       } else if (event === 'SIGNED_OUT') {
         console.log('🔄 User signed out, clearing compartments...')
         setCompartments([])
@@ -71,7 +86,7 @@ export const useCompartments = () => {
     })
 
     return () => subscription.unsubscribe()
-  }, [loadCompartments])
+  }, [loadCompartments, compartments.length])
 
   // Listen for user data seeding events to refresh compartments
   useEffect(() => {
